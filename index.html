@@ -3,226 +3,291 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SchoolLink — Школьный Мессенджер</title>
+    <title>Telegram Web — SchoolLink</title>
     <style>
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         }
 
         body {
-            background-color: #1a1a1a;
+            background-color: #181818;
             color: #ffffff;
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
+            overflow: hidden;
         }
 
-        /* Окно авторизации / регистрации */
+        /* ОКНО АВТОРИЗАЦИИ (КЛАССИЧЕСКИЙ ТГ СТИЛЬ) */
         .auth-container {
-            background-color: #262626;
-            padding: 30px;
+            background-color: #212121;
+            padding: 40px 30px;
             border-radius: 12px;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
             width: 100%;
-            max-width: 400px;
+            max-width: 380px;
             display: flex;
             flex-direction: column;
-            gap: 15px;
+            gap: 20px;
         }
 
         .auth-container h2 {
             text-align: center;
-            color: #00adb5;
-            margin-bottom: 10px;
+            color: #fff;
+            font-size: 26px;
+            font-weight: bold;
         }
 
-        input, select {
+        .auth-container p {
+            text-align: center;
+            color: #aaaaaa;
+            font-size: 14px;
+            margin-top: -10px;
+        }
+
+        input {
             width: 100%;
-            padding: 12px;
-            border-radius: 6px;
-            border: 1px solid #444;
-            background-color: #333;
+            padding: 12px 16px;
+            border-radius: 10px;
+            border: 1px solid #2f2f2f;
+            background-color: #1d1d1d;
             color: #fff;
             font-size: 16px;
             outline: none;
-            transition: border-color 0.3s;
+            transition: border-color 0.2s;
         }
 
-        input:focus, select:focus {
-            border-color: #00adb5;
+        input:focus {
+            border-color: #5288c1;
         }
 
-        button {
+        .auth-btn {
             width: 100%;
-            padding: 12px;
+            padding: 14px;
             border: none;
-            border-radius: 6px;
-            background-color: #00adb5;
+            border-radius: 10px;
+            background-color: #5288c1;
             color: #fff;
             font-size: 16px;
             font-weight: bold;
             cursor: pointer;
             transition: background-color 0.2s;
+            text-transform: uppercase;
         }
 
-        button:hover {
-            background-color: #008c95;
+        .auth-btn:hover {
+            background-color: #4372a3;
         }
 
         .toggle-auth {
             text-align: center;
             font-size: 14px;
-            color: #bbb;
+            color: #5288c1;
             cursor: pointer;
+            font-weight: 500;
+        }
+
+        .toggle-auth:hover {
             text-decoration: underline;
         }
 
-        /* Экран самого чата */
-        .chat-container {
-            background-color: #262626;
-            width: 100%;
-            max-width: 800px;
-            height: 90vh;
-            border-radius: 12px;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+        /* ИНТЕРФЕЙС ЧАТА НА ВЕСЬ ЭКРАН */
+        .tg-container {
+            width: 100vw;
+            height: 100vh;
             display: none; /* Переключится на flex через JS */
             flex-direction: column;
-            overflow: hidden;
+            background-color: #0e1621;
+            background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); /* Фоновый паттерн ТГ */
+            background-blend-mode: overlay;
         }
 
+        /* Шапка чата */
         .chat-header {
-            background-color: #333;
-            padding: 15px 20px;
+            height: 60px;
+            background-color: #17212b;
+            padding: 0 24px;
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            border-bottom: 1px solid #444;
+            justify-content: space-between;
+            border-bottom: 1px solid #101921;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+            z-index: 10;
         }
 
-        .chat-header h3 {
-            color: #00adb5;
+        .chat-header-details h3 {
+            font-size: 16px;
+            font-weight: 600;
+            color: #fff;
         }
 
-        .chat-header .room-info {
+        .chat-header-details p {
+            font-size: 13px;
+            color: #7f91a4;
+            margin-top: 2px;
+        }
+
+        .tg-logout {
+            background: none;
+            border: none;
+            color: #ee6060;
             font-size: 14px;
-            color: #aaa;
+            cursor: pointer;
+            font-weight: 500;
         }
+        .tg-logout:hover { text-decoration: underline; }
 
-        .logout-btn {
-            background-color: #ff4d4d;
-            width: auto;
-            padding: 8px 15px;
-            font-size: 14px;
-        }
-
-        .logout-btn:hover {
-            background-color: #cc3333;
-        }
-
+        /* Окно сообщений (центрировано по ширине, как в ТГ десктопе) */
         .chat-messages {
             flex: 1;
-            padding: 20px;
+            padding: 20px 0;
             overflow-y: auto;
             display: flex;
             flex-direction: column;
-            gap: 12px;
-            background-color: #1e1e1e;
+            gap: 8px;
+            width: 100%;
+            max-width: 720px;
+            margin: 0 auto;
         }
 
-        /* Стили сообщений */
+        /* СТИЛИ СООБЩЕНИЙ */
         .message {
-            max-width: 70%;
-            padding: 10px 14px;
-            border-radius: 8px;
-            background-color: #333;
-            align-self: flex-start;
+            max-width: 500px;
+            padding: 8px 14px;
+            border-radius: 10px;
+            font-size: 15px;
             line-height: 1.4;
+            color: #fff;
             word-wrap: break-word;
+            background-color: #182533; /* Цвет входящих сообщений в ТГ */
+            align-self: flex-start;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+            margin: 0 15px;
         }
 
         .message .sender {
-            font-size: 12px;
-            color: #00adb5;
-            display: block;
-            margin-bottom: 4px;
+            font-size: 13px;
+            color: #4f9cd8;
             font-weight: bold;
+            display: block;
+            margin-bottom: 3px;
         }
 
+        /* Моё сообщение (Тёмно-синее правое) */
         .message.my-message {
-            background-color: #00adb5;
-            color: #fff;
+            background-color: #2b5278;
             align-self: flex-end;
         }
 
         .message.my-message .sender {
-            color: #fff;
-            opacity: 0.8;
+            color: #8ac4ff;
         }
 
-        .chat-input-area {
-            padding: 15px;
-            background-color: #333;
+        /* НИЖНЯЯ ПАНЕЛЬ ВВОДА */
+        .chat-input-wrapper {
+            background-color: #17212b;
+            border-top: 1px solid #101921;
+            width: 100%;
             display: flex;
-            gap: 10px;
-            border-top: 1px solid #444;
+            justify-content: center;
         }
 
-        .chat-input-area input {
+        .chat-input-bar {
+            width: 100%;
+            max-width: 720px;
+            padding: 14px 15px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .chat-input-bar input {
             flex: 1;
+            background: none;
+            border: none;
+            padding: 8px 0;
+            font-size: 16px;
+            color: #fff;
+            outline: none;
         }
 
-        .chat-input-area button {
-            width: auto;
-            padding: 0 25px;
+        .send-btn {
+            background: none;
+            border: none;
+            color: #5288c1;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+            padding: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .send-btn:hover {
+            color: #649ad4;
         }
     </style>
 </head>
 <body>
 
+    <!-- ЭКРАН ВХОДА / РЕГИСТРАЦИИ -->
     <div id="auth-screen" class="auth-container">
-        <h2 id="auth-title">Войти в SchoolLink</h2>
+        <h2 id="auth-title">SchoolLink</h2>
+        <p id="auth-subtitle">Войдите, чтобы начать общение</p>
         
-        <input type="email" id="auth-email" placeholder="Email (например, ivan@mail.ru)">
-        <input type="password" id="auth-password" placeholder="Пароль (минимум 6 знаков)">
+        <input type="email" id="auth-email" placeholder="Электронная почта">
+        <input type="password" id="auth-password" placeholder="Пароль">
         
-        <div id="reg-fields" style="display: none; flex-direction: column; gap: 15px;">
-            <input type="text" id="reg-nickname" placeholder="Твой никнейм в чате">
-            <input type="number" id="reg-school" placeholder="Номер школы (только цифры)">
-            <input type="text" id="reg-class" placeholder="Класс (например: 5-А или 6-Г)">
+        <div id="reg-fields" style="display: none; flex-direction: column; gap: 20px;">
+            <input type="text" id="reg-nickname" placeholder="Ваш никнейм">
+            <input type="number" id="reg-school" placeholder="Номер школы">
+            <input type="text" id="reg-class" placeholder="Класс (например: 6-Г)">
         </div>
 
-        <button id="auth-main-btn" onclick="handleAuthSubmit()">Войти</button>
-        <div id="auth-toggle" class="toggle-auth" onclick="toggleAuthMode()">Нет аккаунта? Зарегистрироваться</div>
+        <button id="auth-main-btn" class="auth-btn" onclick="handleAuthSubmit()">Войти</button>
+        <div id="auth-toggle" class="toggle-auth" onclick="toggleAuthMode()">Создать аккаунт</div>
     </div>
 
-    <div id="chat-screen" class="chat-container">
+    <!-- ПОЛНОЭКРАННЫЙ ЧАТ -->
+    <div id="chat-screen" class="tg-container">
+        
+        <!-- Шапка чата -->
         <div class="chat-header">
+            <div class="chat-header-details">
+                <h3 id="chat-room-title">Чат класса</h3>
+                <p id="chat-room-info">Школа: -- | Класс: --</p>
+            </div>
             <div>
-                <h3 id="user-display-name">Загрузка...</h3>
-                <div class="room-info" id="chat-room-info">Школа: -- | Класс: --</div>
+                <span id="user-display-name" style="font-size: 14px; color: #7f91a4; margin-right: 15px; font-weight: 500;"></span>
+                <button class="tg-logout" onclick="logout()">Выйти</button>
             </div>
-            <button class="logout-btn" onclick="logout()">Выйти</button>
         </div>
         
+        <!-- Окно сообщений -->
         <div class="chat-messages" id="chat-box">
-            </div>
-        
-        <div class="chat-input-area">
-            <input type="text" id="message-input" placeholder="Напишите сообщение..." onkeydown="if(event.key === 'Enter') sendMessage()">
-            <button onclick="sendMessage()">Отправить</button>
+            <!-- Сюда прилетают сообщения -->
         </div>
+        
+        <!-- Панель ввода -->
+        <div class="chat-input-wrapper">
+            <div class="chat-input-bar">
+                <input type="text" id="message-input" placeholder="Напишите сообщение..." onkeydown="if(event.key === 'Enter') sendMessage()">
+                <button class="send-btn" onclick="sendMessage()">Отправить</button>
+            </div>
+        </div>
+
     </div>
 
+    <!-- FIREBASE СКАФФОЛД -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
         import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, updateProfile, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-        import { getFirestore, collection, addDoc, query, where, onSnapshot, serverTimestamp, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, query, onSnapshot, serverTimestamp, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-        // Твоя проверенная рабочая конфигурация Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyApr1QKnLQ3puv3Z2HzvXzT-J8ZeE6-s94",
             authDomain: "schoollink-f6d30.firebaseapp.com",
@@ -243,28 +308,29 @@
         let isSignUpMode = false; 
         let unsubscribeMessages = null;
 
-        // Переключалка интерфейса "Вход / Регистрация"
         window.toggleAuthMode = function() {
             isSignUpMode = !isSignUpMode;
             const title = document.getElementById('auth-title');
+            const subtitle = document.getElementById('auth-subtitle');
             const mainBtn = document.getElementById('auth-main-btn');
             const toggleText = document.getElementById('auth-toggle');
             const regFields = document.getElementById('reg-fields');
 
             if (isSignUpMode) {
-                title.innerText = "Регистрация в SchoolLink";
-                mainBtn.innerText = "Создать аккаунт";
+                title.innerText = "Создать аккаунт";
+                subtitle.innerText = "Заполните форму для регистрации";
+                mainBtn.innerText = "Зарегистрироваться";
                 toggleText.innerText = "Уже есть аккаунт? Войти";
                 regFields.style.display = "flex";
             } else {
-                title.innerText = "Войти в SchoolLink";
+                title.innerText = "SchoolLink";
+                subtitle.innerText = "Войдите, чтобы начать open-общение";
                 mainBtn.innerText = "Войти";
-                toggleText.innerText = "Нет аккаунта? Зарегистрироваться";
+                toggleText.innerText = "Создать аккаунт";
                 regFields.style.display = "none";
             }
         }
 
-        // Клик по кнопке входа/регистрации
         window.handleAuthSubmit = function() {
             const email = document.getElementById('auth-email').value.trim();
             const password = document.getElementById('auth-password').value;
@@ -280,7 +346,7 @@
                 const classNum = document.getElementById('reg-class').value.trim();
 
                 if (!nickname || !school || !classNum) {
-                    alert("Заполните все поля регистрации!");
+                    alert("Заполните все поля!");
                     return;
                 }
 
@@ -293,7 +359,6 @@
                             school: school,
                             class: classNum
                         });
-                        alert("Регистрация успешна!");
                     })
                     .catch((err) => alert("Ошибка: " + err.message));
             } else {
@@ -302,12 +367,10 @@
             }
         }
 
-        // Отслеживание состояния входа пользователя
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 currentUser = user;
                 
-                // Достаем школу и класс из базы данных
                 const userDoc = await getDoc(doc(db, "users", user.uid));
                 if (userDoc.exists()) {
                     userSchool = userDoc.data().school;
@@ -315,7 +378,8 @@
                 }
 
                 document.getElementById('user-display-name').innerText = user.displayName || "Ученик";
-                document.getElementById('chat-room-info').innerText = `Школа №${userSchool} | Класс: ${userClass}`;
+                document.getElementById('chat-room-title').innerText = `Чат ${userClass} класса`;
+                document.getElementById('chat-room-info').innerText = `Школа №${userSchool} | Аккаунт: ${user.displayName || "Ученик"}`;
                 
                 document.getElementById('auth-screen').style.display = 'none';
                 document.getElementById('chat-screen').style.display = 'flex';
@@ -333,7 +397,6 @@
             signOut(auth);
         }
 
-        // Отправка новых сообщений
         window.sendMessage = async function() {
             const input = document.getElementById('message-input');
             const text = input.value.trim();
@@ -354,11 +417,9 @@
             }
         }
 
-        // Загрузка сообщений и отображение (БЕЗ ТРЕБОВАНИЯ ИНДЕКСОВ)
         function loadMessages() {
             if (unsubscribeMessages) unsubscribeMessages();
 
-            // Берём базовую коллекцию сообщений
             const q = query(collection(db, "messages"));
 
             unsubscribeMessages = onSnapshot(q, (snapshot) => {
@@ -367,7 +428,6 @@
 
                 let messagesArray = [];
                 
-                // Фильтруем сообщения на клиенте по школе и классу
                 snapshot.forEach((doc) => {
                     const data = doc.data();
                     if (data.school === userSchool && data.class === userClass) {
@@ -375,14 +435,12 @@
                     }
                 });
 
-                // Сортируем локально по времени получения (старые вверху, свежие внизу)
                 messagesArray.sort((a, b) => {
                     const timeA = a.timestamp ? a.timestamp.toMillis() : 0;
                     const timeB = b.timestamp ? b.timestamp.toMillis() : 0;
                     return timeA - timeB;
                 });
 
-                // Рисуем сообщения на экране
                 messagesArray.forEach((data) => {
                     const msgDiv = document.createElement('div');
                     msgDiv.classList.add('message');
@@ -396,8 +454,6 @@
                 });
                 
                 chatBox.scrollTop = chatBox.scrollHeight;
-            }, (error) => {
-                console.error("Ошибка чата: ", error);
             });
         }
     </script>

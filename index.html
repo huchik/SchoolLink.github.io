@@ -1,133 +1,389 @@
-<!-- 1. Подключаем библиотеки Firebase через тег <script> -->
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-  import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-  import { getFirestore, collection, addDoc, query, where, orderBy, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SchoolLink — Школьный Мессенджер</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
 
-  // 2. Твои личные ключи конфигурации (уже заполнены!)
-  const firebaseConfig = {
-    apiKey: "AIzaSyApr1QKnLQ3puv3Z2HzvXzT-J8ZeE6-s94",
-    authDomain: "schoollink-f6d30.firebaseapp.com",
-    projectId: "schoollink-f6d30",
-    storageBucket: "schoollink-f6d30.firebasestorage.app",
-    messagingSenderId: "471958658890",
-    appId: "1:471958658890:web:c0b396d370954601b46bb3",
-    measurementId: "G-QKT7JXPXBD"
-  };
+        body {
+            background-color: #1a1a1a;
+            color: #ffffff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
 
-  // 3. Инициализируем Firebase
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  const db = getFirestore(app);
+        /* Окно авторизации / регистрации */
+        .auth-container {
+            background-color: #262626;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+            width: 100%;
+            max-width: 400px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
 
-  // Переменные для хранения данных текущего пользователя
-  let currentUser = null;
-  let userSchool = "";
-  let userClass = "";
+        .auth-container h2 {
+            text-align: center;
+            color: #00adb5;
+            margin-bottom: 10px;
+        }
 
-  // ==========================================
-  // ЛОГИКА АВТОРИЗАЦИИ И РЕГИСТРАЦИИ
-  // ==========================================
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border-radius: 6px;
+            border: 1px solid #444;
+            background-color: #333;
+            color: #fff;
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
 
-  // Функция регистрации нового ученика
-  window.registerUser = function(email, password, nickname, schoolNum, classNum) {
-      createUserWithEmailAndPassword(auth, email, password)
-          .then((userCredential) => {
-              // Сохраняем доп. данные (ник, школу, класс) прямо в профиль пользователя
-              // Для простоты теста запишем их локально, но в идеале они сохраняются в базу
-              alert("Аккаунт успешно создан!");
-              userSchool = schoolNum;
-              userClass = classNum;
-          })
-          .catch((error) => alert("Ошибка регистрации: " + error.message));
-  };
+        input:focus, select:focus {
+            border-color: #00adb5;
+        }
 
-  // Функция входа для уже зарегистрированных
-  window.loginUser = function(email, password) {
-      signInWithEmailAndPassword(auth, email, password)
-          .catch((error) => alert("Ошибка входа: " + error.message));
-  };
+        button {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 6px;
+            background-color: #00adb5;
+            color: #fff;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
 
-  // Следим за тем, вошел ли пользователь в систему
-  onAuthStateChanged(auth, (user) => {
-      if (user) {
-          currentUser = user;
-          // Показываем окно чата, скрываем окно входа
-          document.getElementById('auth-screen').style.display = 'none';
-          document.getElementById('chat-screen').style.display = 'flex';
-          
-          // Включаем загрузку сообщений конкретно для этой школы и класса
-          loadMessages();
-      } else {
-          currentUser = null;
-          document.getElementById('auth-screen').style.display = 'flex';
-          document.getElementById('chat-screen').style.display = 'none';
-      }
-  });
+        button:hover {
+            background-color: #008c95;
+        }
 
-  // Выход из аккаунта
-  window.logout = function() {
-      signOut(auth);
-  };
+        .toggle-auth {
+            text-align: center;
+            font-size: 14px;
+            color: #bbb;
+            cursor: pointer;
+            text-decoration: underline;
+        }
 
-  // ==========================================
-  // ЛОГИКА РАБОТЫ С БАЗОЙ ДАННЫХ ЧАТА (FIRESTORE)
-  // ==========================================
+        /* Экран самого чата */
+        .chat-container {
+            background-color: #262626;
+            width: 100%;
+            max-width: 800px;
+            height: 90vh;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+            display: none; /* Переключится на flex через JS */
+            flex-direction: column;
+            overflow: hidden;
+        }
 
-  // Функция отправки сообщения
-  window.sendMessage = async function() {
-      const messageInput = document.getElementById('message-input');
-      const text = messageInput.value.trim();
-      
-      if (text === "" || !currentUser) return;
+        .chat-header {
+            background-color: #333;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #444;
+        }
 
-      try {
-          // Добавляем документ в коллекцию "messages"
-          await addDoc(collection(db, "messages"), {
-              text: text,
-              userId: currentUser.uid,
-              senderName: currentUser.displayName || "Ученик",
-              school: userSchool || "1", // Твоя школа
-              class: userClass || "5",   // Твой класс
-              timestamp: serverTimestamp()
-          });
-          messageInput.value = ""; // Очищаем поле ввода
-      } catch (e) {
-          console.error("Ошибка отправки сообщения: ", e);
-      }
-  };
+        .chat-header h3 {
+            color: #00adb5;
+        }
 
-  // Функция авто-загрузки сообщений в реальном времени (Слушатель базы)
-  function loadMessages() {
-      // Фильтруем сообщения: показывать только те, где школа и класс совпадают с пользователем
-      const q = query(
-          collection(db, "messages"),
-          where("school", "==", userSchool || "1"),
-          where("class", "==", userClass || "1"),
-          orderBy("timestamp", "asc")
-      );
+        .chat-header .room-info {
+            font-size: 14px;
+            color: #aaa;
+        }
 
-      // onSnapshot срабатывает САМ каждый раз, когда в базу прилетает новое сообщение!
-      onSnapshot(q, (querySnapshot) => {
-          const chatBox = document.getElementById('chat-box');
-          chatBox.innerHTML = ""; // Очищаем старые сообщения перед перерисовкой
-          
-          querySnapshot.forEach((doc) => {
-              const data = doc.data();
-              const messageElement = document.createElement('div');
-              messageElement.classList.add('message');
-              
-              // Если сообщение наше — делаем его другого цвета (опционально через CSS)
-              if (data.userId === currentUser.uid) {
-                  messageElement.classList.add('my-message');
-              }
+        .logout-btn {
+            background-color: #ff4d4d;
+            width: auto;
+            padding: 8px 15px;
+            font-size: 14px;
+        }
 
-              messageElement.innerHTML = `<b>${data.senderName}:</b> ${data.text}`;
-              chatBox.appendChild(messageElement);
-          });
-          
-          // Авто-скролл вниз при получении нового сообщения
-          chatBox.scrollTop = chatBox.scrollHeight;
-      });
-  }
-</script>
+        .logout-btn:hover {
+            background-color: #cc3333;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            background-color: #1e1e1e;
+        }
+
+        /* Стили сообщений */
+        .message {
+            max-width: 70%;
+            padding: 10px 14px;
+            border-radius: 8px;
+            background-color: #333;
+            align-self: flex-start;
+            line-height: 1.4;
+            word-wrap: break-word;
+        }
+
+        .message .sender {
+            font-size: 12px;
+            color: #00adb5;
+            display: block;
+            margin-bottom: 4px;
+            font-weight: bold;
+        }
+
+        .message.my-message {
+            background-color: #00adb5;
+            color: #fff;
+            align-self: flex-end;
+        }
+
+        .message.my-message .sender {
+            color: #fff;
+            opacity: 0.8;
+        }
+
+        .chat-input-area {
+            padding: 15px;
+            background-color: #333;
+            display: flex;
+            gap: 10px;
+            border-top: 1px solid #444;
+        }
+
+        .chat-input-area input {
+            flex: 1;
+        }
+
+        .chat-input-area button {
+            width: auto;
+            padding: 0 25px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="auth-screen" class="auth-container">
+        <h2 id="auth-title">Войти в SchoolLink</h2>
+        
+        <input type="email" id="auth-email" placeholder="Email (например, ivan@mail.ru)">
+        <input type="password" id="auth-password" placeholder="Пароль (минимум 6 знаков)">
+        
+        <div id="reg-fields" style="display: none; flex-direction: column; gap: 15px;">
+            <input type="text" id="reg-nickname" placeholder="Твой никнейм в чате">
+            <input type="number" id="reg-school" placeholder="Номер школы (только цифры)">
+            <input type="text" id="reg-class" placeholder="Класс (например: 5-А или 7-Б)">
+        </div>
+
+        <button id="auth-main-btn" onclick="handleAuthSubmit()">Войти</button>
+        <div id="auth-toggle" class="toggle-auth" onclick="toggleAuthMode()">Нет аккаунта? Зарегистрироваться</div>
+    </div>
+
+    <div id="chat-screen" class="chat-container">
+        <div class="chat-header">
+            <div>
+                <h3 id="user-display-name">Загрузка...</h3>
+                <div class="room-info" id="chat-room-info">Школа: -- | Класс: --</div>
+            </div>
+            <button class="logout-btn" onclick="logout()">Выйти</button>
+        </div>
+        
+        <div class="chat-messages" id="chat-box">
+            </div>
+        
+        <div class="chat-input-area">
+            <input type="text" id="message-input" placeholder="Напишите сообщение..." onkeydown="if(event.key === 'Enter') sendMessage()">
+            <button onclick="sendMessage()">Отправить</button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, updateProfile, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+        import { getFirestore, collection, addDoc, query, where, orderBy, onSnapshot, serverTimestamp, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+        // Твои рабочие ключи конфигурации Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyApr1QKnLQ3puv3Z2HzvXzT-J8ZeE6-s94",
+            authDomain: "schoollink-f6d30.firebaseapp.com",
+            projectId: "schoollink-f6d30",
+            storageBucket: "schoollink-f6d30.firebasestorage.app",
+            messagingSenderId: "471958658890",
+            appId: "1:471958658890:web:c0b396d370954601b46bb3",
+            measurementId: "G-QKT7JXPXBD"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        let currentUser = null;
+        let userSchool = "";
+        let userClass = "";
+        let isSignUpMode = false; 
+        let unsubscribeMessages = null;
+
+        // Переключалка интерфейса "Вход / Регистрация"
+        window.toggleAuthMode = function() {
+            isSignUpMode = !isSignUpMode;
+            const title = document.getElementById('auth-title');
+            const mainBtn = document.getElementById('auth-main-btn');
+            const toggleText = document.getElementById('auth-toggle');
+            const regFields = document.getElementById('reg-fields');
+
+            if (isSignUpMode) {
+                title.innerText = "Регистрация в SchoolLink";
+                mainBtn.innerText = "Создать аккаунт";
+                toggleText.innerText = "Уже есть аккаунт? Войти";
+                regFields.style.display = "flex";
+            } else {
+                title.innerText = "Войти в SchoolLink";
+                mainBtn.innerText = "Войти";
+                toggleText.innerText = "Нет аккаунта? Зарегистрироваться";
+                regFields.style.display = "none";
+            }
+        }
+
+        // Клик по главной кнопке входа/регистрации
+        window.handleAuthSubmit = function() {
+            const email = document.getElementById('auth-email').value.trim();
+            const password = document.getElementById('auth-password').value;
+
+            if (!email || !password) {
+                alert("Заполните Email и Пароль!");
+                return;
+            }
+
+            if (isSignUpMode) {
+                const nickname = document.getElementById('reg-nickname').value.trim();
+                const school = document.getElementById('reg-school').value.trim();
+                const classNum = document.getElementById('reg-class').value.trim();
+
+                if (!nickname || !school || !classNum) {
+                    alert("Заполните все поля регистрации!");
+                    return;
+                }
+
+                createUserWithEmailAndPassword(auth, email, password)
+                    .then(async (userCredential) => {
+                        const user = userCredential.user;
+                        await updateProfile(user, { displayName: nickname });
+                        await setDoc(doc(db, "users", user.uid), {
+                            nickname: nickname,
+                            school: school,
+                            class: classNum
+                        });
+                        alert("Регистрация успешна!");
+                    })
+                    .catch((err) => alert("Ошибка: " + err.message));
+            } else {
+                signInWithEmailAndPassword(auth, email, password)
+                    .catch((err) => alert("Ошибка входа: " + err.message));
+            }
+        }
+
+        // Мониторинг авторизации
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                currentUser = user;
+                
+                // Достаем школу и класс юзера
+                const userDoc = await getDoc(doc(db, "users", user.uid));
+                if (userDoc.exists()) {
+                    userSchool = userDoc.data().school;
+                    userClass = userDoc.data().class;
+                }
+
+                document.getElementById('user-display-name').innerText = user.displayName || "Ученик";
+                document.getElementById('chat-room-info').innerText = `Школа №${userSchool} | Класс: ${userClass}`;
+                
+                document.getElementById('auth-screen').style.display = 'none';
+                document.getElementById('chat-screen').style.display = 'flex';
+                
+                loadMessages();
+            } else {
+                currentUser = null;
+                if (unsubscribeMessages) unsubscribeMessages();
+                document.getElementById('auth-screen').style.display = 'flex';
+                document.getElementById('chat-screen').style.display = 'none';
+            }
+        });
+
+        window.logout = function() {
+            signOut(auth);
+        }
+
+        // Отправка сообщений
+        window.sendMessage = async function() {
+            const input = document.getElementById('message-input');
+            const text = input.value.trim();
+            if (text === "" || !currentUser) return;
+
+            try {
+                await addDoc(collection(db, "messages"), {
+                    text: text,
+                    userId: currentUser.uid,
+                    senderName: currentUser.displayName || "Аноним",
+                    school: userSchool,
+                    class: userClass,
+                    timestamp: serverTimestamp()
+                });
+                input.value = "";
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        // Слушатель базы данных
+        function loadMessages() {
+            if (unsubscribeMessages) unsubscribeMessages();
+
+            const q = query(
+                collection(db, "messages"),
+                where("school", "==", userSchool),
+                where("class", "==", userClass),
+                orderBy("timestamp", "asc")
+            );
+
+            unsubscribeMessages = onSnapshot(q, (snapshot) => {
+                const chatBox = document.getElementById('chat-box');
+                chatBox.innerHTML = "";
+
+                snapshot.forEach((doc) => {
+                    const data = doc.data();
+                    const msgDiv = document.createElement('div');
+                    msgDiv.classList.add('message');
+
+                    if (data.userId === currentUser.uid) {
+                        msgDiv.classList.add('my-message');
+                    }
+
+                    msgDiv.innerHTML = `<span class="sender">${data.senderName}</span>${data.text}`;
+                    chatBox.appendChild(msgDiv);
+                });
+                chatBox.scrollTop = chatBox.scrollHeight;
+            });
+        }
+    </script>
+</body>
+</html>

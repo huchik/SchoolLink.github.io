@@ -1,0 +1,133 @@
+<!-- 1. Подключаем библиотеки Firebase через тег <script> -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+  import { getFirestore, collection, addDoc, query, where, orderBy, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+  // 2. Твои личные ключи конфигурации (уже заполнены!)
+  const firebaseConfig = {
+    apiKey: "AIzaSyApr1QKnLQ3puv3Z2HzvXzT-J8ZeE6-s94",
+    authDomain: "schoollink-f6d30.firebaseapp.com",
+    projectId: "schoollink-f6d30",
+    storageBucket: "schoollink-f6d30.firebasestorage.app",
+    messagingSenderId: "471958658890",
+    appId: "1:471958658890:web:c0b396d370954601b46bb3",
+    measurementId: "G-QKT7JXPXBD"
+  };
+
+  // 3. Инициализируем Firebase
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  // Переменные для хранения данных текущего пользователя
+  let currentUser = null;
+  let userSchool = "";
+  let userClass = "";
+
+  // ==========================================
+  // ЛОГИКА АВТОРИЗАЦИИ И РЕГИСТРАЦИИ
+  // ==========================================
+
+  // Функция регистрации нового ученика
+  window.registerUser = function(email, password, nickname, schoolNum, classNum) {
+      createUserWithEmailAndPassword(auth, email, password)
+          .then((userCredential) => {
+              // Сохраняем доп. данные (ник, школу, класс) прямо в профиль пользователя
+              // Для простоты теста запишем их локально, но в идеале они сохраняются в базу
+              alert("Аккаунт успешно создан!");
+              userSchool = schoolNum;
+              userClass = classNum;
+          })
+          .catch((error) => alert("Ошибка регистрации: " + error.message));
+  };
+
+  // Функция входа для уже зарегистрированных
+  window.loginUser = function(email, password) {
+      signInWithEmailAndPassword(auth, email, password)
+          .catch((error) => alert("Ошибка входа: " + error.message));
+  };
+
+  // Следим за тем, вошел ли пользователь в систему
+  onAuthStateChanged(auth, (user) => {
+      if (user) {
+          currentUser = user;
+          // Показываем окно чата, скрываем окно входа
+          document.getElementById('auth-screen').style.display = 'none';
+          document.getElementById('chat-screen').style.display = 'flex';
+          
+          // Включаем загрузку сообщений конкретно для этой школы и класса
+          loadMessages();
+      } else {
+          currentUser = null;
+          document.getElementById('auth-screen').style.display = 'flex';
+          document.getElementById('chat-screen').style.display = 'none';
+      }
+  });
+
+  // Выход из аккаунта
+  window.logout = function() {
+      signOut(auth);
+  };
+
+  // ==========================================
+  // ЛОГИКА РАБОТЫ С БАЗОЙ ДАННЫХ ЧАТА (FIRESTORE)
+  // ==========================================
+
+  // Функция отправки сообщения
+  window.sendMessage = async function() {
+      const messageInput = document.getElementById('message-input');
+      const text = messageInput.value.trim();
+      
+      if (text === "" || !currentUser) return;
+
+      try {
+          // Добавляем документ в коллекцию "messages"
+          await addDoc(collection(db, "messages"), {
+              text: text,
+              userId: currentUser.uid,
+              senderName: currentUser.displayName || "Ученик",
+              school: userSchool || "1", // Твоя школа
+              class: userClass || "5",   // Твой класс
+              timestamp: serverTimestamp()
+          });
+          messageInput.value = ""; // Очищаем поле ввода
+      } catch (e) {
+          console.error("Ошибка отправки сообщения: ", e);
+      }
+  };
+
+  // Функция авто-загрузки сообщений в реальном времени (Слушатель базы)
+  function loadMessages() {
+      // Фильтруем сообщения: показывать только те, где школа и класс совпадают с пользователем
+      const q = query(
+          collection(db, "messages"),
+          where("school", "==", userSchool || "1"),
+          where("class", "==", userClass || "1"),
+          orderBy("timestamp", "asc")
+      );
+
+      // onSnapshot срабатывает САМ каждый раз, когда в базу прилетает новое сообщение!
+      onSnapshot(q, (querySnapshot) => {
+          const chatBox = document.getElementById('chat-box');
+          chatBox.innerHTML = ""; // Очищаем старые сообщения перед перерисовкой
+          
+          querySnapshot.forEach((doc) => {
+              const data = doc.data();
+              const messageElement = document.createElement('div');
+              messageElement.classList.add('message');
+              
+              // Если сообщение наше — делаем его другого цвета (опционально через CSS)
+              if (data.userId === currentUser.uid) {
+                  messageElement.classList.add('my-message');
+              }
+
+              messageElement.innerHTML = `<b>${data.senderName}:</b> ${data.text}`;
+              chatBox.appendChild(messageElement);
+          });
+          
+          // Авто-скролл вниз при получении нового сообщения
+          chatBox.scrollTop = chatBox.scrollHeight;
+      });
+  }
+</script>

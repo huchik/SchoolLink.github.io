@@ -3,7 +3,7 @@
 <head>
     <link rel="icon" type="image/png" href="logo.png">
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>SchoolLink</title>
     <style>
         * {
@@ -32,7 +32,7 @@
             background-color: #17212b;
             padding: 30px 24px;
             border-radius: 12px;
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 4px 166px rgba(0, 0, 0, 0.3);
             width: 90%;
             max-width: 380px;
             display: flex;
@@ -160,7 +160,7 @@
             flex-direction: column;
             gap: 8px;
             width: 100%;
-            -webkit-overflow-scrolling: touch; /* Плавный скролл на айфонах */
+            -webkit-overflow-scrolling: touch;
         }
 
         .chat-messages::-webkit-scrollbar {
@@ -207,16 +207,17 @@
             color: #8ac4ff;
         }
 
-        /* ПАНЕЛЬ ВВОДА (ИСПРАВЛЕНО ДЛЯ МОБИЛОК) */
+        /* ПАНЕЛЬ ВВОДА (ИСПРАВИЛИ НАПОЛЗАНИЕ КНОПОК АНДРОИДА) */
         .chat-input-bar {
             background-color: #17212b;
             border-top: 1px solid #101921;
             width: 100%;
-            padding: 10px 15px;
+            /* Добавили безопасный отступ снизу для кнопок навигации телефона */
+            padding: 10px 15px calc(15px + env(safe-area-inset-bottom));
             display: flex;
             align-items: center;
             gap: 10px;
-            min-height: 55px;
+            min-height: 65px;
             box-sizing: border-box;
         }
 
@@ -259,7 +260,8 @@
 
         .sticker-panel {
             position: absolute;
-            bottom: 60px;
+            /* Приподняли панель стикеров тоже, чтобы не накладывалась */
+            bottom: 75px;
             left: 10px;
             width: 90vw;
             max-width: 320px;
@@ -483,7 +485,7 @@
                 currentUser = null;
                 if (unsubscribeMessages) unsubscribeMessages();
                 document.getElementById('auth-screen').style.display = 'flex';
-                document.getElementById('chat-screen').style.display = 'none';
+                document.getElementById('chat-screen').style.none = 'none';
             }
         });
 

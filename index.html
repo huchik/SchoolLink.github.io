@@ -33,7 +33,7 @@
             max-width: 380px;
             display: flex;
             flex-direction: column;
-            gap: 20px;
+            gap: 15px; /* Немного уменьшил отступ, чтобы новое поле поместилось */
             z-index: 100;
         }
 
@@ -48,7 +48,7 @@
             text-align: center;
             color: #7f91a4;
             font-size: 14px;
-            margin-top: -10px;
+            margin-top: -5px;
         }
 
         input {
@@ -312,6 +312,7 @@
 </head>
 <body>
 
+    <!-- ЭКРАН ВХОДА -->
     <div id="auth-screen" class="auth-container">
         <h2 id="auth-title">SchoolLink</h2>
         <p id="auth-subtitle">Войдите, чтобы начать общение</p>
@@ -319,21 +320,24 @@
         <input type="email" id="auth-email" placeholder="Электронная почта">
         <input type="password" id="auth-password" placeholder="Пароль">
         
-        <div id="reg-fields" style="display: none; flex-direction: column; gap: 20px;">
+        <!-- СЮДА ДОБАВЛЕНО ПОЛЕ ГОРОДА -->
+        <div id="reg-fields" style="display: none; flex-direction: column; gap: 15px;">
             <input type="text" id="reg-nickname" placeholder="Ваш никнейм">
+            <input type="text" id="reg-city" placeholder="Город (например: Москва)">
             <input type="number" id="reg-school" placeholder="Номер школы">
-            <input type="text" id="reg-class" placeholder="Класс (например: 6-Г)">
+            <input type="text" id="reg-class" placeholder="Класс (например: 5-А)">
         </div>
 
         <button id="auth-main-btn" class="auth-btn" onclick="handleAuthSubmit()">Войти</button>
         <div id="auth-toggle" class="toggle-auth" onclick="toggleAuthMode()">Создать аккаунт</div>
     </div>
 
+    <!-- ЧАТ -->
     <div id="chat-screen" class="tg-container">
         <div class="chat-header">
             <div class="chat-header-details">
                 <h3 id="chat-room-title">Чат класса</h3>
-                <p id="chat-room-info">Школа: -- | Класс: --</p>
+                <p id="chat-room-info">Город: -- | Школа: -- | Класс: --</p>
             </div>
             <div>
                 <span id="user-display-name" style="font-size: 15px; color: #7f91a4; margin-right: 15px; font-weight: 500;"></span>
@@ -380,6 +384,7 @@
         const db = getFirestore(app);
 
         let currentUser = null;
+        let userCity = "";
         let userSchool = "";
         let userClass = "";
         let isSignUpMode = false; 
@@ -419,11 +424,12 @@
 
             if (isSignUpMode) {
                 const nickname = document.getElementById('reg-nickname').value.trim();
+                const city = document.getElementById('reg-city').value.trim();
                 const school = document.getElementById('reg-school').value.trim();
                 const classNum = document.getElementById('reg-class').value.trim();
 
-                if (!nickname || !school || !classNum) {
-                    alert("Заполните все поля!");
+                if (!nickname || !city || !school || !classNum) {
+                    alert("Заполните все поля регистрации!");
                     return;
                 }
 
@@ -431,8 +437,10 @@
                     .then(async (userCredential) => {
                         const user = userCredential.user;
                         await updateProfile(user, { displayName: nickname });
+                        // Сохраняем город в базу данных
                         await setDoc(doc(db, "users", user.uid), {
                             nickname: nickname,
+                            city: city,
                             school: school,
                             class: classNum
                         });
@@ -450,19 +458,21 @@
                 
                 const userDoc = await getDoc(doc(db, "users", user.uid));
                 if (userDoc.exists()) {
+                    userCity = userDoc.data().city || "Не указан";
                     userSchool = userDoc.data().school;
                     userClass = userDoc.data().class;
                 }
 
                 document.getElementById('user-display-name').innerText = user.displayName || "Ученик";
                 document.getElementById('chat-room-title').innerText = `Чат ${userClass} класса`;
-                document.getElementById('chat-room-info').innerText = `Школа №${userSchool} | Аккаунт: ${user.displayName || "Ученик"}`;
+                // Выводим город в шапку чата
+                document.getElementById('chat-room-info').innerText = `г. ${userCity} | Школа №${userSchool} | Класс: ${userClass}`;
                 
                 document.getElementById('auth-screen').style.display = 'none';
                 document.getElementById('chat-screen').style.display = 'flex';
                 
                 loadMessages();
-                autoLoadAllStickers(); // Запускаем автопоиск стикеров
+                autoLoadAllStickers();
             } else {
                 currentUser = null;
                 if (unsubscribeMessages) unsubscribeMessages();
@@ -491,6 +501,7 @@
                     text: messageContent,
                     userId: currentUser.uid,
                     senderName: currentUser.displayName || "Аноним",
+                    city: userCity, // Передаем город в сообщение (на будущее)
                     school: userSchool,
                     class: userClass,
                     timestamp: serverTimestamp()
@@ -513,6 +524,7 @@
                 
                 snapshot.forEach((doc) => {
                     const data = doc.data();
+                    // Фильтруем сообщения по школе и классу
                     if (data.school === userSchool && data.class === userClass) {
                         messagesArray.push(data);
                     }
@@ -577,7 +589,6 @@
                 const path = `Stickers/MemePack/${index}.png`;
                 const img = new Image();
                 
-                // Если картинка существует на сервере, сработает этот блок
                 img.onload = function() {
                     const stickerImg = document.createElement('img');
                     stickerImg.src = path;
@@ -592,10 +603,9 @@
                     stickerList.appendChild(stickerImg);
                     
                     index++;
-                    checkNextSticker(); // Проверяем следующую картинку
+                    checkNextSticker();
                 };
                 
-                // Если картинка не найдена (ошибка 404), поиск завершается
                 img.onerror = function() {
                     console.log(`Загрузка стикеров завершена. Всего найдено: ${index - 1}`);
                 };

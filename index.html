@@ -196,7 +196,7 @@
             color: #8ac4ff;
         }
 
-        /* НИЖНЯЯ ПАНЕЛЬ С ИСПРАВЛЕННЫМ ПОЗИЦИОНИРОВАНИЕМ */
+        /* ПАНЕЛЬ ВВОДА */
         .chat-input-bar {
             background-color: #17212b;
             border-top: 1px solid #101921;
@@ -229,7 +229,7 @@
             text-transform: uppercase;
         }
 
-        /* КНОПКА И ОКОШКО СТИКЕРОВ */
+        /* КНОПКА И ОКНО СТИКЕРОВ */
         .sticker-wrapper {
             display: flex;
             align-items: center;
@@ -244,7 +244,6 @@
             outline: none;
         }
 
-        /* Теперь панель стоит ровно над кнопкой и имеет фиксированные размеры, которые не сожмутся */
         .sticker-panel {
             position: absolute;
             bottom: 70px;
@@ -267,24 +266,18 @@
         .sticker-tabs {
             display: flex;
             background-color: #101921;
-            overflow-x: auto;
             border-bottom: 1px solid #24313f;
         }
 
         .sticker-tab {
-            padding: 10px 14px;
-            color: #7f91a4;
+            padding: 12px 16px;
+            color: #5288c1;
             background: none;
             border: none;
-            cursor: pointer;
-            font-size: 13px;
-            font-weight: 600;
-        }
-
-        .sticker-tab.active {
-            color: #5288c1;
-            background-color: #17212b;
-            border-bottom: 2px solid #5288c1;
+            font-size: 14px;
+            font-weight: bold;
+            text-align: left;
+            width: 100%;
         }
 
         .sticker-list {
@@ -357,7 +350,9 @@
                 <button type="button" id="sticker-btn" class="sticker-toggle-btn">😀</button>
                 
                 <div id="sticker-panel" class="sticker-panel hidden">
-                    <div id="sticker-tabs" class="sticker-tabs"></div>
+                    <div id="sticker-tabs" class="sticker-tabs">
+                        <div class="sticker-tab">MemePack</div>
+                    </div>
                     <div id="sticker-list" class="sticker-list"></div>
                 </div>
             </div>
@@ -386,11 +381,8 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // Названия папок и количество картинок в них
-        const stickerConfig = {
-            "MemePack": 3,      
-            "Стикеры_Чат": 5   
-        };
+        // Указываем ровно 1 стикер, который у тебя сейчас загружен на GitHub
+        const totalStickersInPack = 1; 
 
         let currentUser = null;
         let userSchool = "";
@@ -475,7 +467,7 @@
                 document.getElementById('chat-screen').style.display = 'flex';
                 
                 loadMessages();
-                initStickers(); 
+                loadStickers(); 
             } else {
                 currentUser = null;
                 if (unsubscribeMessages) unsubscribeMessages();
@@ -538,7 +530,7 @@
                 });
 
                 messagesArray.forEach((data) => {
-                    if(!data.text) return; // Игнорируем пустые сообщения
+                    if(!data.text) return;
                     
                     const msgDiv = document.createElement('div');
                     msgDiv.classList.add('message');
@@ -548,7 +540,6 @@
                     }
 
                     let messageBody = data.text;
-                    // Если это маркер стикера, превращаем его в тег img
                     if (messageBody.startsWith('[sticker:') && messageBody.endsWith(']')) {
                         const stickerUrl = messageBody.replace('[sticker:', '').replace(']', '');
                         messageBody = `<img src="${stickerUrl}" class="chat-sticker-img" onerror="this.style.display='none'">`;
@@ -562,10 +553,9 @@
             });
         }
 
-        // РАБОТА СО СТИКЕРАМИ
+        // ЛОГИКА ОКНА СТИКЕРОВ
         const stickerBtn = document.getElementById('sticker-btn');
         const stickerPanel = document.getElementById('sticker-panel');
-        const stickerTabs = document.getElementById('sticker-tabs');
         const stickerList = document.getElementById('sticker-list');
 
         if (stickerBtn && stickerPanel) {
@@ -581,38 +571,14 @@
             }
         });
 
-        function initStickers() {
-            if (!stickerTabs || !stickerList) return;
-            stickerTabs.innerHTML = '';
-            let isFirst = true;
-
-            for (const [packName, count] of Object.entries(stickerConfig)) {
-                const tab = document.createElement('button');
-                tab.type = 'button';
-                tab.className = `sticker-tab ${isFirst ? 'active' : ''}`;
-                tab.innerText = packName;
-                
-                tab.addEventListener('click', () => {
-                    document.querySelectorAll('.sticker-tab').forEach(t => t.classList.remove('active'));
-                    tab.classList.add('active');
-                    loadStickers(packName, count);
-                });
-                
-                stickerTabs.appendChild(tab);
-
-                if (isFirst) {
-                    loadStickers(packName, count);
-                    isFirst = false;
-                }
-            }
-        }
-
-        function loadStickers(packName, count) {
+        function loadStickers() {
+            if (!stickerList) return;
             stickerList.innerHTML = '';
             
-            for (let i = 1; i <= count; i++) {
+            for (let i = 1; i <= totalStickersInPack; i++) {
                 const img = document.createElement('img');
-                const path = `Stickers/${packName}/${i}.png`;
+                // Относительный путь, чтобы картинка нормально считывалась на GitHub Pages
+                const path = `Stickers/MemePack/${i}.png`;
                 img.src = path;
                 img.className = 'sticker-item';
                 img.alt = `sticker-${i}`;

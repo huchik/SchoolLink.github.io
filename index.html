@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SchoolLink</title>
+    <title>Telegram Web — SchoolLink</title>
     <style>
         * {
             box-sizing: border-box;
@@ -13,7 +13,7 @@
         }
 
         body {
-            background-color: #181818;
+            background-color: #0e1621;
             color: #ffffff;
             display: flex;
             justify-content: center;
@@ -24,7 +24,7 @@
 
         /* ОКНО АВТОРИЗАЦИИ (КЛАССИЧЕСКИЙ ТГ СТИЛЬ) */
         .auth-container {
-            background-color: #212121;
+            background-color: #17212b;
             padding: 40px 30px;
             border-radius: 12px;
             box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
@@ -33,6 +33,7 @@
             display: flex;
             flex-direction: column;
             gap: 20px;
+            z-index: 100;
         }
 
         .auth-container h2 {
@@ -44,7 +45,7 @@
 
         .auth-container p {
             text-align: center;
-            color: #aaaaaa;
+            color: #7f91a4;
             font-size: 14px;
             margin-top: -10px;
         }
@@ -53,8 +54,8 @@
             width: 100%;
             padding: 12px 16px;
             border-radius: 10px;
-            border: 1px solid #2f2f2f;
-            background-color: #1d1d1d;
+            border: 1px solid #24313f;
+            background-color: #202b36;
             color: #fff;
             font-size: 16px;
             outline: none;
@@ -95,7 +96,7 @@
             text-decoration: underline;
         }
 
-        /* ИНТЕРФЕЙС ЧАТА НА ВЕСЬ ЭКРАН */
+        /* ИНТЕРФЕЙС ЧАТА НА ПОЛНЫЙ ЭКРАН (БЕЗ СУЖЕНИЯ) */
         .tg-container {
             width: 100vw;
             height: 100vh;
@@ -106,7 +107,7 @@
             background-blend-mode: overlay;
         }
 
-        /* Шапка чата */
+        /* Шапка чата во всю ширину */
         .chat-header {
             height: 60px;
             background-color: #17212b;
@@ -115,12 +116,12 @@
             align-items: center;
             justify-content: space-between;
             border-bottom: 1px solid #101921;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
             z-index: 10;
         }
 
         .chat-header-details h3 {
-            font-size: 16px;
+            font-size: 18px; /* Чуть крупнее заголовок */
             font-weight: 600;
             color: #fff;
         }
@@ -135,94 +136,91 @@
             background: none;
             border: none;
             color: #ee6060;
-            font-size: 14px;
+            font-size: 15px;
             cursor: pointer;
             font-weight: 500;
         }
         .tg-logout:hover { text-decoration: underline; }
 
-        /* Окно сообщений (центрировано по ширине, как в ТГ десктопе) */
+        /* Окно сообщений на всю доступную ширину */
         .chat-messages {
             flex: 1;
-            padding: 20px 0;
+            padding: 20px 24px;
             overflow-y: auto;
             display: flex;
             flex-direction: column;
             gap: 8px;
             width: 100%;
-            max-width: 720px;
-            margin: 0 auto;
         }
 
-        /* СТИЛИ СООБЩЕНИЙ */
+        /* Крупные, читаемые сообщения во весь экран */
         .message {
-            max-width: 500px;
-            padding: 8px 14px;
-            border-radius: 10px;
-            font-size: 15px;
-            line-height: 1.4;
-            color: #fff;
+            max-width: 65%; /* Чтобы на широком мониторе длинные сообщения красиво смотрелись */
+            padding: 10px 16px;
+            border-radius: 12px;
+            font-size: 16px; /* Увеличили размер шрифта сообщений */
+            line-height: 1.5;
+            color: #f5f5f5;
             word-wrap: break-word;
-            background-color: #182533; /* Цвет входящих сообщений в ТГ */
+            background-color: #182533; /* Входящие */
             align-self: flex-start;
             box-shadow: 0 1px 2px rgba(0,0,0,0.2);
-            margin: 0 15px;
+            border-bottom-left-radius: 4px; /* ТГ хвостик */
         }
 
         .message .sender {
-            font-size: 13px;
-            color: #4f9cd8;
+            font-size: 14px;
+            color: #5288c1;
             font-weight: bold;
             display: block;
-            margin-bottom: 3px;
+            margin-bottom: 4px;
         }
 
-        /* Моё сообщение (Тёмно-синее правое) */
+        /* Моё сообщение (Правое синее) */
         .message.my-message {
             background-color: #2b5278;
             align-self: flex-end;
+            border-bottom-left-radius: 12px;
+            border-bottom-right-radius: 4px; /* ТГ хвостик справа */
         }
 
         .message.my-message .sender {
             color: #8ac4ff;
         }
 
-        /* НИЖНЯЯ ПАНЕЛЬ ВВОДА */
-        .chat-input-wrapper {
+        /* Панель ввода во всю ширину экрана внизу */
+        .chat-input-bar {
             background-color: #17212b;
             border-top: 1px solid #101921;
             width: 100%;
-            display: flex;
-            justify-content: center;
-        }
-
-        .chat-input-bar {
-            width: 100%;
-            max-width: 720px;
-            padding: 14px 15px;
+            padding: 15px 24px;
             display: flex;
             align-items: center;
-            gap: 15px;
+            gap: 20px;
         }
 
         .chat-input-bar input {
             flex: 1;
             background: none;
             border: none;
-            padding: 8px 0;
-            font-size: 16px;
+            padding: 10px 0;
+            font-size: 16px; /* Увеличили шрифт ввода */
             color: #fff;
             outline: none;
+        }
+
+        .chat-input-bar input::placeholder {
+            color: #6c7883;
         }
 
         .send-btn {
             background: none;
             border: none;
             color: #5288c1;
-            font-size: 15px;
+            font-size: 16px;
             font-weight: bold;
             cursor: pointer;
-            padding: 8px;
+            padding: 10px;
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
@@ -234,7 +232,6 @@
 </head>
 <body>
 
-    <!-- ЭКРАН ВХОДА / РЕГИСТРАЦИИ -->
     <div id="auth-screen" class="auth-container">
         <h2 id="auth-title">SchoolLink</h2>
         <p id="auth-subtitle">Войдите, чтобы начать общение</p>
@@ -252,37 +249,29 @@
         <div id="auth-toggle" class="toggle-auth" onclick="toggleAuthMode()">Создать аккаунт</div>
     </div>
 
-    <!-- ПОЛНОЭКРАННЫЙ ЧАТ -->
     <div id="chat-screen" class="tg-container">
         
-        <!-- Шапка чата -->
         <div class="chat-header">
             <div class="chat-header-details">
                 <h3 id="chat-room-title">Чат класса</h3>
                 <p id="chat-room-info">Школа: -- | Класс: --</p>
             </div>
             <div>
-                <span id="user-display-name" style="font-size: 14px; color: #7f91a4; margin-right: 15px; font-weight: 500;"></span>
+                <span id="user-display-name" style="font-size: 15px; color: #7f91a4; margin-right: 15px; font-weight: 500;"></span>
                 <button class="tg-logout" onclick="logout()">Выйти</button>
             </div>
         </div>
         
-        <!-- Окно сообщений -->
         <div class="chat-messages" id="chat-box">
-            <!-- Сюда прилетают сообщения -->
-        </div>
-        
-        <!-- Панель ввода -->
-        <div class="chat-input-wrapper">
-            <div class="chat-input-bar">
-                <input type="text" id="message-input" placeholder="Напишите сообщение..." onkeydown="if(event.key === 'Enter') sendMessage()">
-                <button class="send-btn" onclick="sendMessage()">Отправить</button>
             </div>
+        
+        <div class="chat-input-bar">
+            <input type="text" id="message-input" placeholder="Напишите сообщение..." onkeydown="if(event.key === 'Enter') sendMessage()">
+            <button class="send-btn" onclick="sendMessage()">Отправить</button>
         </div>
 
     </div>
 
-    <!-- FIREBASE СКАФФОЛД -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
         import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, updateProfile, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -324,7 +313,7 @@
                 regFields.style.display = "flex";
             } else {
                 title.innerText = "SchoolLink";
-                subtitle.innerText = "Войдите, чтобы начать open-общение";
+                subtitle.innerText = "Войдите, чтобы начать общение";
                 mainBtn.innerText = "Войти";
                 toggleText.innerText = "Создать аккаунт";
                 regFields.style.display = "none";
@@ -389,6 +378,7 @@
                 currentUser = null;
                 if (unsubscribeMessages) unsubscribeMessages();
                 document.getElementById('auth-screen').style.display = 'flex';
+                document.getElementById('chat-screen').style.none = 'none';
                 document.getElementById('chat-screen').style.display = 'none';
             }
         });

@@ -312,7 +312,6 @@
 </head>
 <body>
 
-    <!-- ЭКРАН ВХОДА -->
     <div id="auth-screen" class="auth-container">
         <h2 id="auth-title">SchoolLink</h2>
         <p id="auth-subtitle">Войдите, чтобы начать общение</p>
@@ -330,7 +329,6 @@
         <div id="auth-toggle" class="toggle-auth" onclick="toggleAuthMode()">Создать аккаунт</div>
     </div>
 
-    <!-- ЧАТ -->
     <div id="chat-screen" class="tg-container">
         <div class="chat-header">
             <div class="chat-header-details">
@@ -380,9 +378,6 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-
-        // Указываем ровно 1 стикер, который у тебя сейчас загружен на GitHub
-        const totalStickersInPack = 1; 
 
         let currentUser = null;
         let userSchool = "";
@@ -467,7 +462,7 @@
                 document.getElementById('chat-screen').style.display = 'flex';
                 
                 loadMessages();
-                loadStickers(); 
+                autoLoadAllStickers(); // Запускаем автопоиск стикеров
             } else {
                 currentUser = null;
                 if (unsubscribeMessages) unsubscribeMessages();
@@ -571,25 +566,44 @@
             }
         });
 
-        function loadStickers() {
+        // ФУНКЦИЯ УМНОГО АВТОПОИСКА КАРТИНОК
+        function autoLoadAllStickers() {
             if (!stickerList) return;
             stickerList.innerHTML = '';
             
-            for (let i = 1; i <= totalStickersInPack; i++) {
-                const img = document.createElement('img');
-                // Относительный путь, чтобы картинка нормально считывалась на GitHub Pages
-                const path = `Stickers/MemePack/${i}.png`;
+            let index = 1;
+
+            function checkNextSticker() {
+                const path = `Stickers/MemePack/${index}.png`;
+                const img = new Image();
+                
+                // Если картинка существует на сервере, сработает этот блок
+                img.onload = function() {
+                    const stickerImg = document.createElement('img');
+                    stickerImg.src = path;
+                    stickerImg.className = 'sticker-item';
+                    stickerImg.alt = `sticker-${index}`;
+                    
+                    stickerImg.addEventListener('click', () => {
+                        sendToFirebase(`[sticker:${path}]`);
+                        stickerPanel.classList.add('hidden');
+                    });
+                    
+                    stickerList.appendChild(stickerImg);
+                    
+                    index++;
+                    checkNextSticker(); // Проверяем следующую картинку
+                };
+                
+                // Если картинка не найдена (ошибка 404), поиск завершается
+                img.onerror = function() {
+                    console.log(`Загрузка стикеров завершена. Всего найдено: ${index - 1}`);
+                };
+                
                 img.src = path;
-                img.className = 'sticker-item';
-                img.alt = `sticker-${i}`;
-                
-                img.addEventListener('click', () => {
-                    sendToFirebase(`[sticker:${path}]`);
-                    stickerPanel.classList.add('hidden');
-                });
-                
-                stickerList.appendChild(img);
             }
+
+            checkNextSticker();
         }
     </script>
 </body>

@@ -23,7 +23,7 @@
             overflow: hidden;
         }
 
-        /* ОКНО АВТОРИЗАЦИИ (КЛАССИЧЕСКИЙ ТГ СТИЛЬ) */
+        /* ОКНО АВТОРИЗАЦИИ */
         .auth-container {
             background-color: #17212b;
             padding: 40px 30px;
@@ -97,18 +97,17 @@
             text-decoration: underline;
         }
 
-        /* ИНТЕРФЕЙС ЧАТА НА ПОЛНЫЙ ЭКРАН */
+        /* ИНТЕРФЕЙС ЧАТА */
         .tg-container {
             width: 100vw;
             height: 100vh;
-            display: none; /* Переключится на flex через JS */
+            display: none;
             flex-direction: column;
             background-color: #0e1621;
-            background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); /* Фоновый паттерн ТГ */
+            background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png');
             background-blend-mode: overlay;
         }
 
-        /* Шапка чата */
         .chat-header {
             height: 60px;
             background-color: #17212b;
@@ -143,7 +142,6 @@
         }
         .tg-logout:hover { text-decoration: underline; }
 
-        /* Окно сообщений */
         .chat-messages {
             flex: 1;
             padding: 20px 24px;
@@ -152,29 +150,19 @@
             flex-direction: column;
             gap: 8px;
             width: 100%;
-            scrollbar-width: thin;
-            scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
         }
 
-        /* КРУТОЙ ТЁМНЫЙ СКРОЛЛБАР ДЛЯ ХРОМА И КЛИЕНТОВ */
         .chat-messages::-webkit-scrollbar {
             width: 6px;
         }
-
         .chat-messages::-webkit-scrollbar-track {
             background: transparent;
         }
-
         .chat-messages::-webkit-scrollbar-thumb {
             background: rgba(255, 255, 255, 0.15);
             border-radius: 10px;
         }
 
-        .chat-messages::-webkit-scrollbar-thumb:hover {
-            background: rgba(255, 255, 255, 0.3);
-        }
-
-        /* Сообщения */
         .message {
             max-width: 65%;
             padding: 10px 16px;
@@ -197,7 +185,6 @@
             margin-bottom: 4px;
         }
 
-        /* Моё сообщение */
         .message.my-message {
             background-color: #2b5278;
             align-self: flex-end;
@@ -209,7 +196,7 @@
             color: #8ac4ff;
         }
 
-        /* Панель ввода */
+        /* НИЖНЯЯ ПАНЕЛЬ С ИСПРАВЛЕННЫМ ПОЗИЦИОНИРОВАНИЕМ */
         .chat-input-bar {
             background-color: #17212b;
             border-top: 1px solid #101921;
@@ -218,7 +205,7 @@
             display: flex;
             align-items: center;
             gap: 15px;
-            position: relative; /* Чтобы панель стикеров позиционировалась верно */
+            position: relative;
         }
 
         .chat-input-bar input {
@@ -231,10 +218,6 @@
             outline: none;
         }
 
-        .chat-input-bar input::placeholder {
-            color: #6c7883;
-        }
-
         .send-btn {
             background: none;
             border: none;
@@ -244,16 +227,10 @@
             cursor: pointer;
             padding: 10px;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
         }
 
-        .send-btn:hover {
-            color: #649ad4;
-        }
-
-        /* КНОПКА ВЫЗОВА И ПАНЕЛЬ СТИКЕРОВ */
+        /* КНОПКА И ОКОШКО СТИКЕРОВ */
         .sticker-wrapper {
-            position: relative;
             display: flex;
             align-items: center;
         }
@@ -265,42 +242,34 @@
             cursor: pointer;
             padding: 5px;
             outline: none;
-            transition: transform 0.15s;
         }
 
-        .sticker-toggle-btn:hover {
-            transform: scale(1.15);
-        }
-
+        /* Теперь панель стоит ровно над кнопкой и имеет фиксированные размеры, которые не сожмутся */
         .sticker-panel {
             position: absolute;
-            bottom: 60px;
-            right: 0;
-            width: 300px;
-            height: 350px;
+            bottom: 70px;
+            left: 24px;
+            width: 320px;
+            height: 320px;
             background-color: #17212b;
             border: 1px solid #24313f;
             border-radius: 10px;
             box-shadow: 0 4px 20px rgba(0,0,0,0.5);
             display: flex;
             flex-direction: column;
-            z-index: 500;
-            overflow: hidden;
+            z-index: 999;
         }
 
         .sticker-panel.hidden {
-            display: none;
+            display: none !important;
         }
 
-        /* Шапка паков (Вкладки) */
         .sticker-tabs {
             display: flex;
             background-color: #101921;
             overflow-x: auto;
             border-bottom: 1px solid #24313f;
-            scrollbar-width: none; /* Убираем скроллбар у вкладок */
         }
-        .sticker-tabs::-webkit-scrollbar { display: none; }
 
         .sticker-tab {
             padding: 10px 14px;
@@ -310,7 +279,6 @@
             cursor: pointer;
             font-size: 13px;
             font-weight: 600;
-            white-space: nowrap;
         }
 
         .sticker-tab.active {
@@ -319,7 +287,6 @@
             border-bottom: 2px solid #5288c1;
         }
 
-        /* Сетка картинок */
         .sticker-list {
             flex: 1;
             display: grid;
@@ -338,21 +305,21 @@
         }
 
         .sticker-item:hover {
-            transform: scale(1.15);
+            transform: scale(1.1);
         }
 
-        /* Стиль отображения картинки стикера внутри сообщений чата */
         .chat-sticker-img {
-            max-width: 120px;
-            max-height: 120px;
+            max-width: 130px;
+            max-height: 130px;
             display: block;
-            border-radius: 6px;
+            border-radius: 8px;
             margin-top: 4px;
         }
     </style>
 </head>
 <body>
 
+    <!-- ЭКРАН ВХОДА -->
     <div id="auth-screen" class="auth-container">
         <h2 id="auth-title">SchoolLink</h2>
         <p id="auth-subtitle">Войдите, чтобы начать общение</p>
@@ -367,15 +334,15 @@
         </div>
 
         <button id="auth-main-btn" class="auth-btn" onclick="handleAuthSubmit()">Войти</button>
-        <div id="auth-toggle" class="toggle-auth" onclick="toggleAuthMode()">Создать акकाउंट</div>
+        <div id="auth-toggle" class="toggle-auth" onclick="toggleAuthMode()">Создать аккаунт</div>
     </div>
 
+    <!-- ЧАТ -->
     <div id="chat-screen" class="tg-container">
-        
         <div class="chat-header">
             <div class="chat-header-details">
                 <h3 id="chat-room-title">Чат класса</h3>
-                <p id="chat-room-info">Школа: -- | Class: --</p>
+                <p id="chat-room-info">Школа: -- | Класс: --</p>
             </div>
             <div>
                 <span id="user-display-name" style="font-size: 15px; color: #7f91a4; margin-right: 15px; font-weight: 500;"></span>
@@ -383,8 +350,7 @@
             </div>
         </div>
         
-        <div class="chat-messages" id="chat-box">
-            </div>
+        <div class="chat-messages" id="chat-box"></div>
         
         <div class="chat-input-bar">
             <div class="sticker-wrapper">
@@ -399,7 +365,6 @@
             <input type="text" id="message-input" placeholder="Напишите сообщение..." onkeydown="if(event.key === 'Enter') sendMessage()">
             <button class="send-btn" onclick="sendMessage()">Отправить</button>
         </div>
-
     </div>
 
     <script type="module">
@@ -421,11 +386,10 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // --- 1. НАСТРОЙКА ТВОИХ ПАПОК СО СТИКЕРАМИ ---
-        // Изменяй цифры под количество файлов картинок внутри папок на гитхабе
+        // Названия папок и количество картинок в них
         const stickerConfig = {
-            "MemePack": 3,      // Папка Stickers/MemePack (файлы 1.png, 2.png, 3.png)
-            "Стикеры_Чат": 5   // Папка Stickers/Стикеры_Чат (файлы от 1.png до 5.png)
+            "MemePack": 3,      
+            "Стикеры_Чат": 5   
         };
 
         let currentUser = null;
@@ -511,7 +475,7 @@
                 document.getElementById('chat-screen').style.display = 'flex';
                 
                 loadMessages();
-                initStickers(); // Запуск стикеров только после входа
+                initStickers(); 
             } else {
                 currentUser = null;
                 if (unsubscribeMessages) unsubscribeMessages();
@@ -533,8 +497,8 @@
             input.value = "";
         }
 
-        // Вынес отправку в отдельную функцию, чтобы и стикеры, и текст шли через один канал
         async function sendToFirebase(messageContent) {
+            if(!messageContent) return;
             try {
                 await addDoc(collection(db, "messages"), {
                     text: messageContent,
@@ -574,6 +538,8 @@
                 });
 
                 messagesArray.forEach((data) => {
+                    if(!data.text) return; // Игнорируем пустые сообщения
+                    
                     const msgDiv = document.createElement('div');
                     msgDiv.classList.add('message');
 
@@ -581,11 +547,11 @@
                         msgDiv.classList.add('my-message');
                     }
 
-                    // ПРОВЕРКА: Если сообщение это маркер стикера, превращаем его в картинку img
                     let messageBody = data.text;
+                    // Если это маркер стикера, превращаем его в тег img
                     if (messageBody.startsWith('[sticker:') && messageBody.endsWith(']')) {
                         const stickerUrl = messageBody.replace('[sticker:', '').replace(']', '');
-                        messageBody = `<img src="${stickerUrl}" class="chat-sticker-img">`;
+                        messageBody = `<img src="${stickerUrl}" class="chat-sticker-img" onerror="this.style.display='none'">`;
                     }
 
                     msgDiv.innerHTML = `<span class="sender">${data.senderName}</span>${messageBody}`;
@@ -596,7 +562,7 @@
             });
         }
 
-        // --- 2. ЛОГИКА СТИКЕР-ПАНЕЛИ ---
+        // РАБОТА СО СТИКЕРАМИ
         const stickerBtn = document.getElementById('sticker-btn');
         const stickerPanel = document.getElementById('sticker-panel');
         const stickerTabs = document.getElementById('sticker-tabs');
@@ -652,7 +618,6 @@
                 img.alt = `sticker-${i}`;
                 
                 img.addEventListener('click', () => {
-                    // Отправляем специальный маркер стикера в Firebase
                     sendToFirebase(`[sticker:${path}]`);
                     stickerPanel.classList.add('hidden');
                 });

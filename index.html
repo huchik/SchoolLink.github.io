@@ -103,20 +103,81 @@
             text-decoration: underline;
         }
 
-        /* ИНТЕРФЕЙС ЧАТА */
+        /* ГЛАВНЫЙ ИНТЕРФЕЙС ПРИЛОЖЕНИЯ */
         .tg-container {
             width: 100%;
             height: 100%;
             display: none;
-            flex-direction: column;
             background-color: #0e1621;
+            position: absolute;
+            top: 0; left: 0; bottom: 0; right: 0;
+        }
+
+        /* БОКОВАЯ ПАНЕЛЬ С ЧАТАМИ (ДИСКОРД СТИЛЬ) */
+        .sidebar {
+            width: 72px;
+            min-width: 72px;
+            background-color: #101921;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 12px 0;
+            gap: 8px;
+            overflow-y: auto;
+            border-right: 1px solid #101921;
+        }
+
+        .sidebar::-webkit-scrollbar { display: none; }
+
+        /* Кнопки чатов */
+        .chat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background-color: #17212b;
+            color: #5288c1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+            border: 2px solid transparent;
+            background-size: cover;
+            background-position: center;
+        }
+
+        .chat-icon:hover, .chat-icon.active {
+            border-radius: 16px;
+            background-color: #5288c1;
+            color: #fff;
+        }
+
+        .chat-icon.active {
+            border-color: #fff;
+        }
+
+        .add-chat-btn {
+            background-color: #202b36;
+            color: #2ea44f;
+            font-size: 24px;
+        }
+        .add-chat-btn:hover {
+            background-color: #2ea44f;
+            color: #fff;
+        }
+
+        /*ОСНОВНАЯ ЗОНА ЧАТА */
+        .chat-main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
             background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png');
             background-blend-mode: overlay;
-            position: absolute;
-            top: 0;
-            left: 0;
-            bottom: 0;
-            right: 0;
+            background-color: #0e1621;
+            position: relative;
         }
 
         .chat-header {
@@ -165,18 +226,14 @@
             -webkit-overflow-scrolling: touch;
         }
 
-        .chat-messages::-webkit-scrollbar {
-            width: 4px;
-        }
-        .chat-messages::-webkit-scrollbar-track {
-            background: transparent;
-        }
+        .chat-messages::-webkit-scrollbar { width: 4px; }
+        .chat-messages::-webkit-scrollbar-track { background: transparent; }
         .chat-messages::-webkit-scrollbar-thumb {
             background: rgba(255, 255, 255, 0.15);
             border-radius: 10px;
         }
 
-        /* ОБЕРТКА ДЛЯ СООБЩЕНИЯ С АВАТАРКОЙ */
+        /* СООБЩЕНИЯ */
         .message-row {
             display: flex;
             align-items: flex-end;
@@ -187,10 +244,9 @@
 
         .message-row.my-row {
             align-self: flex-end;
-            flex-direction: row-reverse; /* У себя переворачиваем, чтобы аватарка была справа */
+            flex-direction: row-reverse;
         }
 
-        /* СТИЛИ АВАТАРКИ */
         .user-avatar {
             width: 35px;
             height: 35px;
@@ -198,7 +254,6 @@
             object-fit: cover;
             background-color: #24313f;
             flex-shrink: 0;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
         }
 
         .message {
@@ -227,9 +282,7 @@
             border-bottom-right-radius: 4px;
         }
 
-        .message.my-message .sender {
-            color: #8ac4ff;
-        }
+        .message.my-message .sender { color: #8ac4ff; }
 
         /* ПАНЕЛЬ ВВОДА */
         .chat-input-bar {
@@ -241,7 +294,6 @@
             align-items: center;
             gap: 10px;
             min-height: 65px;
-            box-sizing: border-box;
         }
 
         .chat-input-bar input {
@@ -252,7 +304,6 @@
             padding: 8px 14px;
             font-size: 15px;
             color: #fff;
-            outline: none;
         }
 
         .send-btn {
@@ -263,28 +314,16 @@
             font-weight: bold;
             cursor: pointer;
             padding: 5px;
-            text-transform: uppercase;
         }
 
-        /* КНОПКА И ОКНО СТИКЕРОВ */
-        .sticker-wrapper {
-            display: flex;
-            align-items: center;
-        }
-
-        .sticker-toggle-btn {
-            background: none;
-            border: none;
-            font-size: 22px;
-            cursor: pointer;
-            padding: 5px;
-            outline: none;
-        }
-
+        /* СТИКЕРЫ */
+        .sticker-wrapper { display: flex; align-items: center; }
+        .sticker-toggle-btn { background: none; border: none; font-size: 22px; cursor: pointer; padding: 5px; }
+        
         .sticker-panel {
             position: absolute;
             bottom: 75px;
-            left: 10px;
+            left: 80px; /* Сдвинуто из-за сайдбара */
             width: 90vw;
             max-width: 320px;
             height: 280px;
@@ -297,56 +336,17 @@
             z-index: 999;
         }
 
-        .sticker-panel.hidden {
-            display: none !important;
-        }
-
-        .sticker-tabs {
-            display: flex;
-            background-color: #101921;
-            border-bottom: 1px solid #24313f;
-        }
-
-        .sticker-tab {
-            padding: 10px 14px;
-            color: #5288c1;
-            background: none;
-            border: none;
-            font-size: 13px;
-            font-weight: bold;
-            text-align: left;
-            width: 100%;
-        }
-
-        .sticker-list {
-            flex: 1;
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 8px;
-            padding: 10px;
-            overflow-y: auto;
-        }
-
-        .sticker-item {
-            width: 100%;
-            aspect-ratio: 1;
-            object-fit: contain;
-            cursor: pointer;
-        }
-
-        .chat-sticker-img {
-            max-width: 140px;
-            max-height: 140px;
-            width: 100%;
-            height: auto;
-            display: block;
-            border-radius: 8px;
-            margin-top: 4px;
-        }
+        .sticker-panel.hidden { display: none !important; }
+        .sticker-tabs { display: flex; background-color: #101921; border-bottom: 1px solid #24313f; }
+        .sticker-tab { padding: 10px 14px; color: #5288c1; font-size: 13px; font-weight: bold; }
+        .sticker-list { flex: 1; display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; padding: 10px; overflow-y: auto; }
+        .sticker-item { width: 100%; aspect-ratio: 1; object-fit: contain; cursor: pointer; }
+        .chat-sticker-img { max-width: 140px; max-height: 140px; width: 100%; height: auto; display: block; border-radius: 8px; margin-top: 4px; }
     </style>
 </head>
 <body>
 
+    <!-- ЭКРАН ВХОДА / РЕГИСТРАЦИИ -->
     <div id="auth-screen" class="auth-container">
         <h2 id="auth-title">SchoolLink</h2>
         <p id="auth-subtitle">Войдите, чтобы начать общение</p>
@@ -366,33 +366,43 @@
         <div id="auth-toggle" class="toggle-auth" onclick="toggleAuthMode()">Создать аккаунт</div>
     </div>
 
+    <!-- ГЛАВНЫЙ СУПЕР-КОНТЕЙНЕР ПРИЛОЖЕНИЯ -->
     <div id="chat-screen" class="tg-container">
-        <div class="chat-header">
-            <div class="chat-header-details">
-                <h3 id="chat-room-title">Чат класса</h3>
-                <p id="chat-room-info">Город: -- | Школа: -- | Класс: --</p>
-            </div>
-            <div>
-                <button class="tg-logout" onclick="logout()">Выйти</button>
-            </div>
+        
+        <!-- ЛЕВАЯ ПАНЕЛЬ (СПИСОК ГРУПП) -->
+        <div class="sidebar" id="group-sidebar">
+            <!-- Кнопка добавления новой группы -->
+            <div class="chat-icon add-chat-btn" onclick="createNewGroupPrompt()" title="Создать группу">+</div>
+            <!-- Сюда скрипт добавит чат класса и кастомные группы -->
         </div>
-        
-        <div class="chat-messages" id="chat-box"></div>
-        
-        <div class="chat-input-bar">
-            <div class="sticker-wrapper">
-                <button type="button" id="sticker-btn" class="sticker-toggle-btn">😀</button>
-                
-                <div id="sticker-panel" class="sticker-panel hidden">
-                    <div id="sticker-tabs" class="sticker-tabs">
-                        <div class="sticker-tab">MemePack</div>
-                    </div>
-                    <div id="sticker-list" class="sticker-list"></div>
+
+        <!-- ОСНОВНОЕ ОКНО ТЕКУЩЕГО ЧАТА -->
+        <div class="chat-main">
+            <div class="chat-header">
+                <div class="chat-header-details">
+                    <h3 id="chat-room-title">Загрузка...</h3>
+                    <p id="chat-room-info">Город: -- | Школа: --</p>
+                </div>
+                <div>
+                    <button class="tg-logout" onclick="logout()">Выйти</button>
                 </div>
             </div>
+            
+            <div class="chat-messages" id="chat-box"></div>
+            
+            <div class="chat-input-bar">
+                <div class="sticker-wrapper">
+                    <button type="button" id="sticker-btn" class="sticker-toggle-btn">😀</button>
+                    
+                    <div id="sticker-panel" class="sticker-panel hidden">
+                        <div class="sticker-tabs"><div class="sticker-tab">MemePack</div></div>
+                        <div id="sticker-list" class="sticker-list"></div>
+                    </div>
+                </div>
 
-            <input type="text" id="message-input" placeholder="Напишите сообщение..." onkeydown="if(event.key === 'Enter') sendMessage()">
-            <button class="send-btn" onclick="sendMessage()">👉</button>
+                <input type="text" id="message-input" placeholder="Напишите сообщение..." onkeydown="if(event.key === 'Enter') sendMessage()">
+                <button class="send-btn" onclick="sendMessage()">👉</button>
+            </div>
         </div>
     </div>
 
@@ -419,11 +429,15 @@
         let userCity = "";
         let userSchool = "";
         let userClass = "";
-        let userAvatarUrl = ""; // Ссылка на аватарку текущего юзера
+        let userAvatarUrl = "";
         let isSignUpMode = false; 
+        
+        let currentGroupId = "main_class"; // По умолчанию открыт основной чат класса
+        let currentGroupName = "Чат класса";
+        
         let unsubscribeMessages = null;
+        let unsubscribeGroups = null;
 
-        // Дефолтная заглушка, если юзер не вставил свою ссылку
         const DEFAULT_AVATAR = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
 
         window.toggleAuthMode = function() {
@@ -473,8 +487,6 @@
                 createUserWithEmailAndPassword(auth, email, password)
                     .then(async (userCredential) => {
                         const user = userCredential.user;
-                        
-                        // Если ссылку оставили пустой, ставим стандартного человечка
                         const finalAvatar = avatar || DEFAULT_AVATAR;
 
                         await updateProfile(user, { 
@@ -511,17 +523,17 @@
                     userAvatarUrl = user.photoURL || DEFAULT_AVATAR;
                 }
 
-                document.getElementById('chat-room-title').innerText = `Чат ${userClass} класса`;
-                document.getElementById('chat-room-info').innerText = `г. ${userCity} | Школа №${userSchool} | Класс: ${userClass}`;
-                
                 document.getElementById('auth-screen').style.display = 'none';
                 document.getElementById('chat-screen').style.display = 'flex';
                 
-                loadMessages();
+                // Запуск прослушивания групп и сообщений
+                loadGroupsListener();
+                switchGroup("main_class", `Чат ${userClass}`);
                 autoLoadAllStickers();
             } else {
                 currentUser = null;
                 if (unsubscribeMessages) unsubscribeMessages();
+                if (unsubscribeGroups) unsubscribeGroups();
                 document.getElementById('auth-screen').style.display = 'flex';
                 document.getElementById('chat-screen').style.display = 'none';
             }
@@ -531,6 +543,104 @@
             signOut(auth);
         }
 
+        /* СОЗДАНИЕ НОВОЙ ГРУППЫ */
+        window.createNewGroupPrompt = async function() {
+            const groupName = prompt("Введите название новой группы:");
+            if (!groupName || groupName.trim() === "") return;
+
+            const groupAvatar = prompt("Вставьте ссылку на аватарку группы (необязательно):");
+            
+            try {
+                await addDoc(collection(db, "groups"), {
+                    name: groupName.trim(),
+                    avatarUrl: groupAvatar.trim() || "",
+                    school: userSchool,
+                    class: userClass,
+                    createdBy: currentUser.uid,
+                    timestamp: serverTimestamp()
+                });
+            } catch (e) {
+                console.error("Ошибка при создании группы:", e);
+            }
+        }
+
+        /* ОБНОВЛЕНИЕ СПИСКА ГРУПП СЛЕВА */
+        function loadGroupsListener() {
+            if (unsubscribeGroups) unsubscribeGroups();
+
+            const q = query(collection(db, "groups"));
+            
+            unsubscribeGroups = onSnapshot(q, (snapshot) => {
+                const sidebar = document.getElementById('group-sidebar');
+                
+                // Удаляем старые кастомные иконки, оставляя только кнопку «+»
+                const plusBtn = sidebar.querySelector('.add-chat-btn');
+                sidebar.innerHTML = "";
+                sidebar.appendChild(plusBtn);
+
+                // 1. Сначала железно создаем иконку основного общего чата класса
+                const mainClassIcon = document.createElement('div');
+                mainClassIcon.className = `chat-icon ${currentGroupId === 'main_class' ? 'active' : ''}`;
+                mainClassIcon.innerText = "КЛ";
+                mainClassIcon.title = `Основной чат (${userClass})`;
+                mainClassIcon.onclick = () => switchGroup("main_class", `Чат ${userClass}`);
+                sidebar.appendChild(mainClassIcon);
+
+                // 2. Добавляем созданные пользователями группы для текущей школы и класса
+                snapshot.forEach((docSnap) => {
+                    const data = docSnap.data();
+                    const gId = docSnap.id;
+
+                    if (data.school === userSchool && data.class === userClass) {
+                        const groupIcon = document.createElement('div');
+                        groupIcon.className = `chat-icon ${currentGroupId === gId ? 'active' : ''}`;
+                        
+                        if (data.avatarUrl) {
+                            groupIcon.style.backgroundImage = `url('${data.avatarUrl}')`;
+                        } else {
+                            // Если авы нет, берем первые 2 буквы имени
+                            groupIcon.innerText = data.name.substring(0, 2).toUpperCase();
+                        }
+                        
+                        groupIcon.title = data.name;
+                        groupIcon.onclick = () => switchGroup(gId, data.name);
+                        sidebar.appendChild(groupIcon);
+                    }
+                });
+            });
+        }
+
+        /* ПЕРЕКЛЮЧЕНИЕ МЕЖДУ ГРУППАМИ */
+        window.switchGroup = function(groupId, groupName) {
+            currentGroupId = groupId;
+            currentGroupName = groupName;
+
+            document.getElementById('chat-room-title').innerText = groupName;
+            document.getElementById('chat-room-info').innerText = `г. ${userCity} | Школа №${userSchool} | Класс: ${userClass}`;
+
+            // Визуально переключаем активную иконку в сайдбаре
+            const icons = document.querySelectorAll('.chat-icon');
+            icons.forEach(icon => icon.classList.remove('active'));
+            
+            // Перезапускаем подписку на сообщения для выбранной группы
+            loadMessages();
+            
+            // Снова обновляем сайдбар, чтобы подсветить нужный элемент
+            if(currentUser) {
+                const sidebar = document.getElementById('group-sidebar');
+                // Небольшой хак для быстрой подсветки без полного рендера
+                setTimeout(() => {
+                    const items = sidebar.querySelectorAll('.chat-icon');
+                    items.forEach(it => {
+                        if(it.title.includes(groupName) || (groupId === 'main_class' && it.innerText === 'КЛ')) {
+                            it.classList.add('active');
+                        }
+                    });
+                }, 100);
+            }
+        }
+
+        /* ОТПРАВКА СООБЩЕНИЯ В КОНКРЕТНУЮ ГРУППУ */
         window.sendMessage = async function() {
             const input = document.getElementById('message-input');
             const text = input.value.trim();
@@ -547,7 +657,8 @@
                     text: messageContent,
                     userId: currentUser.uid,
                     senderName: currentUser.displayName || "Аноним",
-                    avatarUrl: userAvatarUrl, // Сохраняем ссылку на аву прямо в сообщение
+                    avatarUrl: userAvatarUrl,
+                    groupId: currentGroupId, // Важно: привязываем сообщение к ID текущей группы!
                     city: userCity,
                     school: userSchool,
                     class: userClass,
@@ -558,6 +669,7 @@
             }
         }
 
+        /* ЗАГРУЗКА СООБЩЕНИЙ С ФИЛЬТРОМ ПО ГРУППЕ */
         function loadMessages() {
             if (unsubscribeMessages) unsubscribeMessages();
 
@@ -571,7 +683,11 @@
                 
                 snapshot.forEach((doc) => {
                     const data = doc.data();
-                    if (data.school === userSchool && data.class === userClass) {
+                    
+                    // Фильтруем: школа, класс И совпадение ID группы
+                    const msgGroupId = data.groupId || "main_class"; // Старые сообщения без ID вешаем на общий класс
+                    
+                    if (data.school === userSchool && data.class === userClass && msgGroupId === currentGroupId) {
                         messagesArray.push(data);
                     }
                 });
@@ -585,7 +701,6 @@
                 messagesArray.forEach((data) => {
                     if(!data.text) return;
                     
-                    // Создаем строку-обертку, в которой будет и аватарка, и само сообщение
                     const rowDiv = document.createElement('div');
                     rowDiv.classList.add('message-row');
 
@@ -605,11 +720,9 @@
 
                     msgDiv.innerHTML = `<span class="sender">${data.senderName}</span>${messageBody}`;
                     
-                    // Берем ссылку на аву из сообщения или ставим дефолт
                     const msgAvatarUrl = data.avatarUrl || DEFAULT_AVATAR;
                     const avatarImg = `<img src="${msgAvatarUrl}" class="user-avatar" onerror="this.src='${DEFAULT_AVATAR}'">`;
 
-                    // Собираем всё вместе: аватарка + блок сообщения
                     rowDiv.innerHTML = avatarImg;
                     rowDiv.appendChild(msgDiv);
                     
@@ -669,7 +782,7 @@
                 };
                 
                 img.onerror = function() {
-                    console.log(`Загрузка стикеров завершена. Всего найдено: ${index - 1}`);
+                    console.log(`Загрузка стикеров завершена.`);
                 };
                 
                 img.src = path;

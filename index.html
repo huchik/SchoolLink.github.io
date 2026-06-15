@@ -373,6 +373,7 @@
 </head>
 <body>
 
+    <!-- ЭКРАН ВХОДА / РЕГИСТРАЦИИ -->
     <div id="auth-screen" class="auth-container">
         <h2 id="auth-title">SchoolLink</h2>
         <p id="auth-subtitle">Войдите, чтобы начать общение</p>
@@ -392,12 +393,15 @@
         <div id="auth-toggle" class="toggle-auth" onclick="toggleAuthMode()">Создать аккаунт</div>
     </div>
 
+    <!-- ГЛАВНЫЙ СУПЕР-КОНТЕЙНЕР ПРИЛОЖЕНИЯ -->
     <div id="chat-screen" class="tg-container">
         
+        <!-- ЛЕВАЯ ПАНЕЛЬ (СПИСОК ГРУПП) -->
         <div class="sidebar" id="group-sidebar">
             <div class="chat-icon add-chat-btn" onclick="createNewGroupPrompt()" title="Создать группу">+</div>
         </div>
 
+        <!-- ОСНОВНОЕ ОКНО ТЕКУЩЕГО ЧАТА -->
         <div class="chat-main">
             <div class="chat-header">
                 <div class="chat-header-left">
@@ -521,9 +525,9 @@
                         await setDoc(doc(db, "users", user.uid), {
                             nickname: nickname,
                             avatarUrl: finalAvatar,
-                            city: String(city),
-                            school: String(school),
-                            class: String(classNum)
+                            city: String(city).trim(),
+                            school: String(school).trim(), // При регистрации сохраняем строкой
+                            class: String(classNum).trim()
                         });
                     })
                     .catch((err) => alert("Ошибка: " + err.message));
@@ -611,7 +615,7 @@
                 await addDoc(collection(db, "groups"), {
                     name: groupName.trim(),
                     avatarUrl: groupAvatar.trim() || "",
-                    school: String(userSchool), 
+                    school: String(userSchool).trim(), // Исправлено: СТРОКА
                     createdBy: currentUser.uid,
                     timestamp: serverTimestamp()
                 });
@@ -642,7 +646,7 @@
                     const data = docSnap.data();
                     const gId = docSnap.id;
 
-                    if (String(data.school) === String(userSchool)) {
+                    if (String(data.school).trim() === String(userSchool).trim()) {
                         const groupIcon = document.createElement('div');
                         groupIcon.className = `chat-icon ${String(currentGroupId) === String(gId) ? 'active' : ''}`;
                         
@@ -709,11 +713,11 @@
                     userId: currentUser.uid,
                     senderName: currentUser.displayName || "Аноним",
                     avatarUrl: userAvatarUrl,
-                    groupId: String(currentGroupId), 
-                    city: String(userCity),
-                    school: String(userSchool), 
-                    class: currentGroupId === "main_class" ? String(userClass).toLowerCase() : "global",
-                    senderClass: String(userClass).toUpperCase(), 
+                    groupId: String(currentGroupId).trim(), 
+                    city: String(userCity).trim(),
+                    school: String(userSchool).trim(), // Исправлено: СТРОКА
+                    class: currentGroupId === "main_class" ? String(userClass).toLowerCase().trim() : "global",
+                    senderClass: String(userClass).toUpperCase().trim(), 
                     timestamp: serverTimestamp()
                 });
             } catch (e) {
@@ -736,15 +740,22 @@
                     const data = doc.data();
                     const msgGroupId = data.groupId || "main_class"; 
                     
-                    if (String(data.school) === String(userSchool)) {
-                        if (String(currentGroupId) === "main_class") {
-                            if (String(msgGroupId) === "main_class" && 
-                                String(data.class).toLowerCase() === String(userClass).toLowerCase()) {
+                    // Полная очистка типов и пробелов во время фильтрации
+                    const dbSchool = String(data.school).trim();
+                    const mySchool = String(userSchool).trim();
+                    const dbClass = String(data.class).toLowerCase().trim();
+                    const myClass = String(userClass).toLowerCase().trim();
+                    const dbGroupId = String(msgGroupId).trim();
+                    const myGroupId = String(currentGroupId).trim();
+
+                    if (dbSchool === mySchool) {
+                        if (myGroupId === "main_class") {
+                            if (dbGroupId === "main_class" && dbClass === myClass) {
                                 messagesArray.push(data);
                             }
                         } 
                         else {
-                            if (String(msgGroupId) === String(currentGroupId)) {
+                            if (dbGroupId === myGroupId) {
                                 messagesArray.push(data);
                             }
                         }

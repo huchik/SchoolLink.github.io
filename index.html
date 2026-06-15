@@ -311,7 +311,7 @@
 
         .message.my-message .sender { color: #8ac4ff; }
 
-        /* ПАНЕЛЬ ВВОДОД */
+        /* ПАНЕЛЬ ВВОДА */
         .chat-input-bar {
             background-color: #17212b;
             border-top: 1px solid #101921;
@@ -521,9 +521,9 @@
                         await setDoc(doc(db, "users", user.uid), {
                             nickname: nickname,
                             avatarUrl: finalAvatar,
-                            city: city,
-                            school: school,
-                            class: classNum
+                            city: String(city),
+                            school: String(school),
+                            class: String(classNum)
                         });
                     })
                     .catch((err) => alert("Ошибка: " + err.message));
@@ -550,9 +550,7 @@
                 document.getElementById('auth-screen').style.display = 'none';
                 document.getElementById('chat-screen').style.display = 'flex';
                 
-                // Проверяем, перешёл ли пользователь по ссылке на конкретную группу
                 checkUrlHashGroup();
-                
                 loadGroupsListener();
                 autoLoadAllStickers();
             } else {
@@ -568,21 +566,15 @@
             signOut(auth);
         }
 
-        /* КОПИРОВАНИЕ ССЫЛКИ В БУФЕР ОБМЕНА */
         window.copyGroupLink = function() {
-            // Создаем ссылку вида: https://домен/#group=ID_ГРУППЫ
             const link = `${window.location.origin}${window.location.pathname}#group=${currentGroupId}`;
-            
             navigator.clipboard.writeText(link).then(() => {
-                alert(`Ссылка на группу "${currentGroupName}" скопирована! Отправь её одноклассникам.`);
+                alert(`Ссылка на группу "${currentGroupName}" скопирована!`);
             }).catch(err => {
-                console.error("Не удалось скопировать ссылку:", err);
-                // Запасной вариант, если браузер блокирует navigator.clipboard
                 alert(`Вот твоя ссылка: ${link}`);
             });
         }
 
-        /* ПРОВЕРКА URL ПРИ ВХОДЕ */
         async function checkUrlHashGroup() {
             const hash = window.location.hash;
             if (hash && hash.startsWith("#group=")) {
@@ -593,26 +585,22 @@
                     return;
                 }
 
-                // Пытаемся вытащить имя группы из базы, чтобы красиво отобразить шапку
                 try {
                     const groupDoc = await getDoc(doc(db, "groups", targetGroupId));
                     if (groupDoc.exists()) {
                         const gData = groupDoc.data();
                         switchGroup(targetGroupId, gData.name);
                     } else {
-                        // Если группа не найдена, открываем дефолт
                         switchGroup("main_class", `Чат ${userClass}`);
                     }
                 } catch(e) {
                     switchGroup("main_class", `Чат ${userClass}`);
                 }
             } else {
-                // Если ссылки в хэше нет — грузим дефолтный чат класса
                 switchGroup("main_class", `Чат ${userClass}`);
             }
         }
 
-        /* СОЗДАНИЕ НОВОЙ ГРУППЫ */
         window.createNewGroupPrompt = async function() {
             const groupName = prompt("Введите название новой группы:");
             if (!groupName || groupName.trim() === "") return;
@@ -623,8 +611,8 @@
                 await addDoc(collection(db, "groups"), {
                     name: groupName.trim(),
                     avatarUrl: groupAvatar.trim() || "",
-                    school: userSchool,
-                    class: userClass,
+                    school: String(userSchool),
+                    class: String(userClass),
                     createdBy: currentUser.uid,
                     timestamp: serverTimestamp()
                 });
@@ -633,7 +621,6 @@
             }
         }
 
-        /* ОБНОВЛЕНИЕ СПИСКА ГРУПП СЛЕВА */
         function loadGroupsListener() {
             if (unsubscribeGroups) unsubscribeGroups();
 
@@ -645,22 +632,20 @@
                 sidebar.innerHTML = "";
                 sidebar.appendChild(plusBtn);
 
-                // Главный чат класса
                 const mainClassIcon = document.createElement('div');
-                mainClassIcon.className = `chat-icon ${currentGroupId === 'main_class' ? 'active' : ''}`;
+                mainClassIcon.className = `chat-icon ${String(currentGroupId) === 'main_class' ? 'active' : ''}`;
                 mainClassIcon.innerText = "КЛ";
                 mainClassIcon.title = `Основной чат (${userClass})`;
                 mainClassIcon.onclick = () => switchGroup("main_class", `Чат ${userClass}`);
                 sidebar.appendChild(mainClassIcon);
 
-                // Кастомные группы
                 snapshot.forEach((docSnap) => {
                     const data = docSnap.data();
                     const gId = docSnap.id;
 
-                    if (data.school === userSchool && data.class === userClass) {
+                    if (String(data.school) === String(userSchool) && String(data.class) === String(userClass)) {
                         const groupIcon = document.createElement('div');
-                        groupIcon.className = `chat-icon ${currentGroupId === gId ? 'active' : ''}`;
+                        groupIcon.className = `chat-icon ${String(currentGroupId) === String(gId) ? 'active' : ''}`;
                         
                         if (data.avatarUrl) {
                             groupIcon.style.backgroundImage = `url('${data.avatarUrl}')`;
@@ -676,12 +661,10 @@
             });
         }
 
-        /* ПЕРЕКЛЮЧЕНИЕ МЕЖДУ ГРУППАМИ */
         window.switchGroup = function(groupId, groupName) {
             currentGroupId = groupId;
             currentGroupName = groupName;
 
-            // Обновляем хэш в адресной строке браузера, чтобы ссылка менялась на лету при кликах!
             window.location.hash = `group=${groupId}`;
 
             document.getElementById('chat-room-title').innerText = groupName;
@@ -705,7 +688,6 @@
             }
         }
 
-        /* ОТПРАВКА СООБЩЕНИЯ */
         window.sendMessage = async function() {
             const input = document.getElementById('message-input');
             const text = input.value.trim();
@@ -723,10 +705,10 @@
                     userId: currentUser.uid,
                     senderName: currentUser.displayName || "Аноним",
                     avatarUrl: userAvatarUrl,
-                    groupId: currentGroupId, 
-                    city: userCity,
-                    school: userSchool,
-                    class: userClass,
+                    groupId: String(currentGroupId), 
+                    city: String(userCity),
+                    school: String(userSchool), 
+                    class: String(userClass),
                     timestamp: serverTimestamp()
                 });
             } catch (e) {
@@ -734,7 +716,6 @@
             }
         }
 
-        /* ЗАГРУЗКА СООБЩЕНИЙ */
         function loadMessages() {
             if (unsubscribeMessages) unsubscribeMessages();
 
@@ -750,7 +731,9 @@
                     const data = doc.data();
                     const msgGroupId = data.groupId || "main_class"; 
                     
-                    if (data.school === userSchool && data.class === userClass && msgGroupId === currentGroupId) {
+                    if (String(data.school) === String(userSchool) && 
+                        String(data.class) === String(userClass) && 
+                        String(msgGroupId) === String(currentGroupId)) {
                         messagesArray.push(data);
                     }
                 });

@@ -113,7 +113,7 @@
             top: 0; left: 0; bottom: 0; right: 0;
         }
 
-        /* БОКОВАЯ ПАНЕЛЬ С ЧАТАМИ */
+        /* БОКОВАЯ ПАНЕЛЬ С ОДНИМ ЧАТОМ КЛАССА */
         .sidebar {
             width: 72px;
             min-width: 72px;
@@ -122,7 +122,7 @@
             flex-direction: column;
             align-items: center;
             padding: 12px 0;
-            gap: 8px;
+            gap: 12px;
             overflow-y: auto;
             border-right: 1px solid #101921;
         }
@@ -132,40 +132,16 @@
         .chat-icon {
             width: 48px;
             height: 48px;
-            border-radius: 50%;
-            background-color: #17212b;
-            color: #5288c1;
+            border-radius: 16px;
+            background-color: #5288c1;
+            color: #fff;
             display: flex;
             justify-content: center;
             align-items: center;
             font-size: 14px;
             font-weight: bold;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            position: relative;
-            border: 2px solid transparent;
-            background-size: cover;
-            background-position: center;
-        }
-
-        .chat-icon:hover, .chat-icon.active {
-            border-radius: 16px;
-            background-color: #5288c1;
-            color: #fff;
-        }
-
-        .chat-icon.active {
-            border-color: #fff;
-        }
-
-        .add-chat-btn {
-            background-color: #202b36;
-            color: #2ea44f;
-            font-size: 24px;
-        }
-        .add-chat-btn:hover {
-            background-color: #2ea44f;
-            color: #fff;
+            cursor: default;
+            border: 2px solid #fff;
         }
 
         /* ОСНОВНАЯ ЗОНА ЧАТА */
@@ -207,29 +183,6 @@
             font-size: 12px;
             color: #7f91a4;
             margin-top: 2px;
-        }
-
-        .header-actions {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .share-btn {
-            background-color: #24313f;
-            border: 1px solid #5288c1;
-            color: #5288c1;
-            padding: 6px 12px;
-            border-radius: 15px;
-            font-size: 12px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: all 0.2s;
-        }
-
-        .share-btn:hover {
-            background-color: #5288c1;
-            color: #fff;
         }
 
         .tg-logout {
@@ -373,7 +326,6 @@
 </head>
 <body>
 
-    <!-- ЭКРАН ВХОДА / РЕГИСТРАЦИИ -->
     <div id="auth-screen" class="auth-container">
         <h2 id="auth-title">SchoolLink</h2>
         <p id="auth-subtitle">Войдите, чтобы начать общение</p>
@@ -393,15 +345,12 @@
         <div id="auth-toggle" class="toggle-auth" onclick="toggleAuthMode()">Создать аккаунт</div>
     </div>
 
-    <!-- ГЛАВНЫЙ СУПЕР-КОНТЕЙНЕР ПРИЛОЖЕНИЯ -->
     <div id="chat-screen" class="tg-container">
         
-        <!-- ЛЕВАЯ ПАНЕЛЬ (СПИСОК ГРУПП) -->
         <div class="sidebar" id="group-sidebar">
-            <div class="chat-icon add-chat-btn" onclick="createNewGroupPrompt()" title="Создать группу">+</div>
+            <div id="btn-class-chat" class="chat-icon" title="Чат класса">КЛ</div>
         </div>
 
-        <!-- ОСНОВНОЕ ОКНО ТЕКУЩЕГО ЧАТА -->
         <div class="chat-main">
             <div class="chat-header">
                 <div class="chat-header-left">
@@ -411,7 +360,6 @@
                     </div>
                 </div>
                 <div class="header-actions">
-                    <button class="share-btn" onclick="copyGroupLink()">🔗 Ссылка на группу</button>
                     <button class="tg-logout" onclick="logout()">Выйти</button>
                 </div>
             </div>
@@ -459,12 +407,7 @@
         let userClass = "";
         let userAvatarUrl = "";
         let isSignUpMode = false; 
-        
-        let currentGroupId = "main_class"; 
-        let currentGroupName = "Чат класса";
-        
         let unsubscribeMessages = null;
-        let unsubscribeGroups = null;
 
         const DEFAULT_AVATAR = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
 
@@ -526,7 +469,7 @@
                             nickname: nickname,
                             avatarUrl: finalAvatar,
                             city: String(city).trim(),
-                            school: String(school).trim(), // При регистрации сохраняем строкой
+                            school: String(school).trim(),
                             class: String(classNum).trim()
                         });
                     })
@@ -554,13 +497,15 @@
                 document.getElementById('auth-screen').style.display = 'none';
                 document.getElementById('chat-screen').style.display = 'flex';
                 
-                checkUrlHashGroup();
-                loadGroupsListener();
+                // Настраиваем шапку и запускаем чтение сообщений
+                document.getElementById('chat-room-title').innerText = `Чат ${userClass}`;
+                document.getElementById('chat-room-info').innerText = `г. ${userCity} | Школа №${userSchool}`;
+                
+                loadMessages();
                 autoLoadAllStickers();
             } else {
                 currentUser = null;
                 if (unsubscribeMessages) unsubscribeMessages();
-                if (unsubscribeGroups) unsubscribeGroups();
                 document.getElementById('auth-screen').style.display = 'flex';
                 document.getElementById('chat-screen').style.display = 'none';
             }
@@ -568,132 +513,6 @@
 
         window.logout = function() {
             signOut(auth);
-        }
-
-        window.copyGroupLink = function() {
-            const link = `${window.location.origin}${window.location.pathname}#group=${currentGroupId}`;
-            navigator.clipboard.writeText(link).then(() => {
-                alert(`Ссылка на группу "${currentGroupName}" скопирована!`);
-            }).catch(err => {
-                alert(`Вот твоя ссылка: ${link}`);
-            });
-        }
-
-        async function checkUrlHashGroup() {
-            const hash = window.location.hash;
-            if (hash && hash.startsWith("#group=")) {
-                const targetGroupId = hash.replace("#group=", "");
-                
-                if (targetGroupId === "main_class") {
-                    switchGroup("main_class", `Чат ${userClass}`);
-                    return;
-                }
-
-                try {
-                    const groupDoc = await getDoc(doc(db, "groups", targetGroupId));
-                    if (groupDoc.exists()) {
-                        const gData = groupDoc.data();
-                        switchGroup(targetGroupId, gData.name);
-                    } else {
-                        switchGroup("main_class", `Чат ${userClass}`);
-                    }
-                } catch(e) {
-                    switchGroup("main_class", `Чат ${userClass}`);
-                }
-            } else {
-                switchGroup("main_class", `Чат ${userClass}`);
-            }
-        }
-
-        window.createNewGroupPrompt = async function() {
-            const groupName = prompt("Введите название новой межклассовой группы:");
-            if (!groupName || groupName.trim() === "") return;
-
-            const groupAvatar = prompt("Вставьте ссылку на аватарку группы (необязательно):");
-            
-            try {
-                await addDoc(collection(db, "groups"), {
-                    name: groupName.trim(),
-                    avatarUrl: groupAvatar.trim() || "",
-                    school: String(userSchool).trim(), // Исправлено: СТРОКА
-                    createdBy: currentUser.uid,
-                    timestamp: serverTimestamp()
-                });
-            } catch (e) {
-                console.error("Ошибка при создании группы:", e);
-            }
-        }
-
-        function loadGroupsListener() {
-            if (unsubscribeGroups) unsubscribeGroups();
-
-            const q = query(collection(db, "groups"));
-            
-            unsubscribeGroups = onSnapshot(q, (snapshot) => {
-                const sidebar = document.getElementById('group-sidebar');
-                const plusBtn = sidebar.querySelector('.add-chat-btn');
-                sidebar.innerHTML = "";
-                sidebar.appendChild(plusBtn);
-
-                const mainClassIcon = document.createElement('div');
-                mainClassIcon.className = `chat-icon ${String(currentGroupId) === 'main_class' ? 'active' : ''}`;
-                mainClassIcon.innerText = "КЛ";
-                mainClassIcon.title = `Основной чат (${userClass})`;
-                mainClassIcon.onclick = () => switchGroup("main_class", `Чат ${userClass}`);
-                sidebar.appendChild(mainClassIcon);
-
-                snapshot.forEach((docSnap) => {
-                    const data = docSnap.data();
-                    const gId = docSnap.id;
-
-                    if (String(data.school).trim() === String(userSchool).trim()) {
-                        const groupIcon = document.createElement('div');
-                        groupIcon.className = `chat-icon ${String(currentGroupId) === String(gId) ? 'active' : ''}`;
-                        
-                        if (data.avatarUrl) {
-                            groupIcon.style.backgroundImage = `url('${data.avatarUrl}')`;
-                        } else {
-                            groupIcon.innerText = data.name.substring(0, 2).toUpperCase();
-                        }
-                        
-                        groupIcon.title = data.name;
-                        groupIcon.onclick = () => switchGroup(gId, data.name);
-                        sidebar.appendChild(groupIcon);
-                    }
-                });
-            });
-        }
-
-        window.switchGroup = function(groupId, groupName) {
-            currentGroupId = groupId;
-            currentGroupName = groupName;
-
-            window.location.hash = `group=${groupId}`;
-
-            document.getElementById('chat-room-title').innerText = groupName;
-            
-            if (groupId === "main_class") {
-                document.getElementById('chat-room-info').innerText = `г. ${userCity} | Школа №${userSchool} | Класс: ${userClass}`;
-            } else {
-                document.getElementById('chat-room-info').innerText = `г. ${userCity} | Школа №${userSchool} | Общая группа`;
-            }
-
-            const icons = document.querySelectorAll('.chat-icon');
-            icons.forEach(icon => icon.classList.remove('active'));
-            
-            loadMessages();
-            
-            if(currentUser) {
-                const sidebar = document.getElementById('group-sidebar');
-                setTimeout(() => {
-                    const items = sidebar.querySelectorAll('.chat-icon');
-                    items.forEach(it => {
-                        if(it.title.includes(groupName) || (groupId === 'main_class' && it.innerText === 'КЛ')) {
-                            it.classList.add('active');
-                        }
-                    });
-                }, 100);
-            }
         }
 
         window.sendMessage = async function() {
@@ -713,11 +532,9 @@
                     userId: currentUser.uid,
                     senderName: currentUser.displayName || "Аноним",
                     avatarUrl: userAvatarUrl,
-                    groupId: String(currentGroupId).trim(), 
                     city: String(userCity).trim(),
-                    school: String(userSchool).trim(), // Исправлено: СТРОКА
-                    class: currentGroupId === "main_class" ? String(userClass).toLowerCase().trim() : "global",
-                    senderClass: String(userClass).toUpperCase().trim(), 
+                    school: String(userSchool).trim(),
+                    class: String(userClass).toLowerCase().trim(),
                     timestamp: serverTimestamp()
                 });
             } catch (e) {
@@ -738,36 +555,26 @@
                 
                 snapshot.forEach((doc) => {
                     const data = doc.data();
-                    const msgGroupId = data.groupId || "main_class"; 
                     
-                    // Полная очистка типов и пробелов во время фильтрации
                     const dbSchool = String(data.school).trim();
                     const mySchool = String(userSchool).trim();
                     const dbClass = String(data.class).toLowerCase().trim();
                     const myClass = String(userClass).toLowerCase().trim();
-                    const dbGroupId = String(msgGroupId).trim();
-                    const myGroupId = String(currentGroupId).trim();
 
-                    if (dbSchool === mySchool) {
-                        if (myGroupId === "main_class") {
-                            if (dbGroupId === "main_class" && dbClass === myClass) {
-                                messagesArray.push(data);
-                            }
-                        } 
-                        else {
-                            if (dbGroupId === myGroupId) {
-                                messagesArray.push(data);
-                            }
-                        }
+                    // Фильтруем: только сообщения из той же школы и того же класса
+                    if (dbSchool === mySchool && dbClass === myClass) {
+                        messagesArray.push(data);
                     }
                 });
 
+                // Сортировка по времени
                 messagesArray.sort((a, b) => {
                     const timeA = a.timestamp ? a.timestamp.toMillis() : 0;
                     const timeB = b.timestamp ? b.timestamp.toMillis() : 0;
                     return timeA - timeB;
                 });
 
+                // Отрисовка
                 messagesArray.forEach((data) => {
                     if(!data.text) return;
                     
@@ -787,11 +594,8 @@
                         const stickerUrl = messageBody.replace('[sticker:', '').replace(']', '');
                         messageBody = `<img src="${stickerUrl}" class="chat-sticker-img" onerror="this.style.display='none'">`;
                     }
-
-                    const userTagClass = data.senderClass ? data.senderClass : (data.class !== 'global' ? String(data.class).toUpperCase() : '');
-                    const displayClass = userTagClass ? ` (${userTagClass})` : '';
                     
-                    msgDiv.innerHTML = `<span class="sender">${data.senderName}${displayClass}</span>${messageBody}`;
+                    msgDiv.innerHTML = `<span class="sender">${data.senderName}</span>${messageBody}`;
                     
                     const msgAvatarUrl = data.avatarUrl || DEFAULT_AVATAR;
                     const avatarImg = `<img src="${msgAvatarUrl}" class="user-avatar" onerror="this.src='${DEFAULT_AVATAR}'">`;
@@ -806,6 +610,7 @@
             });
         }
 
+        // Стикер-панель
         const stickerBtn = document.getElementById('sticker-btn');
         const stickerPanel = document.getElementById('sticker-panel');
         const stickerList = document.getElementById('sticker-list');

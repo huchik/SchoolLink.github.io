@@ -113,7 +113,7 @@
             top: 0; left: 0; bottom: 0; right: 0;
         }
 
-        /* БОКОВАЯ ПАНЕЛЬ С ЧАТАМИ (ДИСКОРД СТИЛЬ) */
+        /* БОКОВАЯ ПАНЕЛЬ С ЧАТАМИ */
         .sidebar {
             width: 72px;
             min-width: 72px;
@@ -129,7 +129,6 @@
 
         .sidebar::-webkit-scrollbar { display: none; }
 
-        /* Кнопки чатов */
         .chat-icon {
             width: 48px;
             height: 48px;
@@ -169,7 +168,7 @@
             color: #fff;
         }
 
-        /*ОСНОВНАЯ ЗОНА ЧАТА */
+        /* ОСНОВНАЯ ЗОНА ЧАТА */
         .chat-main {
             flex: 1;
             display: flex;
@@ -193,6 +192,11 @@
             z-index: 10;
         }
 
+        .chat-header-left {
+            display: flex;
+            flex-direction: column;
+        }
+
         .chat-header-details h3 {
             font-size: 16px;
             font-weight: 600;
@@ -203,6 +207,29 @@
             font-size: 12px;
             color: #7f91a4;
             margin-top: 2px;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .share-btn {
+            background-color: #24313f;
+            border: 1px solid #5288c1;
+            color: #5288c1;
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 12px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+
+        .share-btn:hover {
+            background-color: #5288c1;
+            color: #fff;
         }
 
         .tg-logout {
@@ -284,7 +311,7 @@
 
         .message.my-message .sender { color: #8ac4ff; }
 
-        /* ПАНЕЛЬ ВВОДА */
+        /* ПАНЕЛЬ ВВОДОД */
         .chat-input-bar {
             background-color: #17212b;
             border-top: 1px solid #101921;
@@ -323,7 +350,7 @@
         .sticker-panel {
             position: absolute;
             bottom: 75px;
-            left: 80px; /* Сдвинуто из-за сайдбара */
+            left: 80px;
             width: 90vw;
             max-width: 320px;
             height: 280px;
@@ -346,7 +373,6 @@
 </head>
 <body>
 
-    <!-- ЭКРАН ВХОДА / РЕГИСТРАЦИИ -->
     <div id="auth-screen" class="auth-container">
         <h2 id="auth-title">SchoolLink</h2>
         <p id="auth-subtitle">Войдите, чтобы начать общение</p>
@@ -366,24 +392,22 @@
         <div id="auth-toggle" class="toggle-auth" onclick="toggleAuthMode()">Создать аккаунт</div>
     </div>
 
-    <!-- ГЛАВНЫЙ СУПЕР-КОНТЕЙНЕР ПРИЛОЖЕНИЯ -->
     <div id="chat-screen" class="tg-container">
         
-        <!-- ЛЕВАЯ ПАНЕЛЬ (СПИСОК ГРУПП) -->
         <div class="sidebar" id="group-sidebar">
-            <!-- Кнопка добавления новой группы -->
             <div class="chat-icon add-chat-btn" onclick="createNewGroupPrompt()" title="Создать группу">+</div>
-            <!-- Сюда скрипт добавит чат класса и кастомные группы -->
         </div>
 
-        <!-- ОСНОВНОЕ ОКНО ТЕКУЩЕГО ЧАТА -->
         <div class="chat-main">
             <div class="chat-header">
-                <div class="chat-header-details">
-                    <h3 id="chat-room-title">Загрузка...</h3>
-                    <p id="chat-room-info">Город: -- | Школа: --</p>
+                <div class="chat-header-left">
+                    <div class="chat-header-details">
+                        <h3 id="chat-room-title">Загрузка...</h3>
+                        <p id="chat-room-info">Город: -- | Школа: --</p>
+                    </div>
                 </div>
-                <div>
+                <div class="header-actions">
+                    <button class="share-btn" onclick="copyGroupLink()">🔗 Ссылка на группу</button>
                     <button class="tg-logout" onclick="logout()">Выйти</button>
                 </div>
             </div>
@@ -432,7 +456,7 @@
         let userAvatarUrl = "";
         let isSignUpMode = false; 
         
-        let currentGroupId = "main_class"; // По умолчанию открыт основной чат класса
+        let currentGroupId = "main_class"; 
         let currentGroupName = "Чат класса";
         
         let unsubscribeMessages = null;
@@ -526,9 +550,10 @@
                 document.getElementById('auth-screen').style.display = 'none';
                 document.getElementById('chat-screen').style.display = 'flex';
                 
-                // Запуск прослушивания групп и сообщений
+                // Проверяем, перешёл ли пользователь по ссылке на конкретную группу
+                checkUrlHashGroup();
+                
                 loadGroupsListener();
-                switchGroup("main_class", `Чат ${userClass}`);
                 autoLoadAllStickers();
             } else {
                 currentUser = null;
@@ -541,6 +566,50 @@
 
         window.logout = function() {
             signOut(auth);
+        }
+
+        /* КОПИРОВАНИЕ ССЫЛКИ В БУФЕР ОБМЕНА */
+        window.copyGroupLink = function() {
+            // Создаем ссылку вида: https://домен/#group=ID_ГРУППЫ
+            const link = `${window.location.origin}${window.location.pathname}#group=${currentGroupId}`;
+            
+            navigator.clipboard.writeText(link).then(() => {
+                alert(`Ссылка на группу "${currentGroupName}" скопирована! Отправь её одноклассникам.`);
+            }).catch(err => {
+                console.error("Не удалось скопировать ссылку:", err);
+                // Запасной вариант, если браузер блокирует navigator.clipboard
+                alert(`Вот твоя ссылка: ${link}`);
+            });
+        }
+
+        /* ПРОВЕРКА URL ПРИ ВХОДЕ */
+        async function checkUrlHashGroup() {
+            const hash = window.location.hash;
+            if (hash && hash.startsWith("#group=")) {
+                const targetGroupId = hash.replace("#group=", "");
+                
+                if (targetGroupId === "main_class") {
+                    switchGroup("main_class", `Чат ${userClass}`);
+                    return;
+                }
+
+                // Пытаемся вытащить имя группы из базы, чтобы красиво отобразить шапку
+                try {
+                    const groupDoc = await getDoc(doc(db, "groups", targetGroupId));
+                    if (groupDoc.exists()) {
+                        const gData = groupDoc.data();
+                        switchGroup(targetGroupId, gData.name);
+                    } else {
+                        // Если группа не найдена, открываем дефолт
+                        switchGroup("main_class", `Чат ${userClass}`);
+                    }
+                } catch(e) {
+                    switchGroup("main_class", `Чат ${userClass}`);
+                }
+            } else {
+                // Если ссылки в хэше нет — грузим дефолтный чат класса
+                switchGroup("main_class", `Чат ${userClass}`);
+            }
         }
 
         /* СОЗДАНИЕ НОВОЙ ГРУППЫ */
@@ -572,13 +641,11 @@
             
             unsubscribeGroups = onSnapshot(q, (snapshot) => {
                 const sidebar = document.getElementById('group-sidebar');
-                
-                // Удаляем старые кастомные иконки, оставляя только кнопку «+»
                 const plusBtn = sidebar.querySelector('.add-chat-btn');
                 sidebar.innerHTML = "";
                 sidebar.appendChild(plusBtn);
 
-                // 1. Сначала железно создаем иконку основного общего чата класса
+                // Главный чат класса
                 const mainClassIcon = document.createElement('div');
                 mainClassIcon.className = `chat-icon ${currentGroupId === 'main_class' ? 'active' : ''}`;
                 mainClassIcon.innerText = "КЛ";
@@ -586,7 +653,7 @@
                 mainClassIcon.onclick = () => switchGroup("main_class", `Чат ${userClass}`);
                 sidebar.appendChild(mainClassIcon);
 
-                // 2. Добавляем созданные пользователями группы для текущей школы и класса
+                // Кастомные группы
                 snapshot.forEach((docSnap) => {
                     const data = docSnap.data();
                     const gId = docSnap.id;
@@ -598,7 +665,6 @@
                         if (data.avatarUrl) {
                             groupIcon.style.backgroundImage = `url('${data.avatarUrl}')`;
                         } else {
-                            // Если авы нет, берем первые 2 буквы имени
                             groupIcon.innerText = data.name.substring(0, 2).toUpperCase();
                         }
                         
@@ -615,20 +681,19 @@
             currentGroupId = groupId;
             currentGroupName = groupName;
 
+            // Обновляем хэш в адресной строке браузера, чтобы ссылка менялась на лету при кликах!
+            window.location.hash = `group=${groupId}`;
+
             document.getElementById('chat-room-title').innerText = groupName;
             document.getElementById('chat-room-info').innerText = `г. ${userCity} | Школа №${userSchool} | Класс: ${userClass}`;
 
-            // Визуально переключаем активную иконку в сайдбаре
             const icons = document.querySelectorAll('.chat-icon');
             icons.forEach(icon => icon.classList.remove('active'));
             
-            // Перезапускаем подписку на сообщения для выбранной группы
             loadMessages();
             
-            // Снова обновляем сайдбар, чтобы подсветить нужный элемент
             if(currentUser) {
                 const sidebar = document.getElementById('group-sidebar');
-                // Небольшой хак для быстрой подсветки без полного рендера
                 setTimeout(() => {
                     const items = sidebar.querySelectorAll('.chat-icon');
                     items.forEach(it => {
@@ -640,7 +705,7 @@
             }
         }
 
-        /* ОТПРАВКА СООБЩЕНИЯ В КОНКРЕТНУЮ ГРУППУ */
+        /* ОТПРАВКА СООБЩЕНИЯ */
         window.sendMessage = async function() {
             const input = document.getElementById('message-input');
             const text = input.value.trim();
@@ -658,7 +723,7 @@
                     userId: currentUser.uid,
                     senderName: currentUser.displayName || "Аноним",
                     avatarUrl: userAvatarUrl,
-                    groupId: currentGroupId, // Важно: привязываем сообщение к ID текущей группы!
+                    groupId: currentGroupId, 
                     city: userCity,
                     school: userSchool,
                     class: userClass,
@@ -669,7 +734,7 @@
             }
         }
 
-        /* ЗАГРУЗКА СООБЩЕНИЙ С ФИЛЬТРОМ ПО ГРУППЕ */
+        /* ЗАГРУЗКА СООБЩЕНИЙ */
         function loadMessages() {
             if (unsubscribeMessages) unsubscribeMessages();
 
@@ -683,9 +748,7 @@
                 
                 snapshot.forEach((doc) => {
                     const data = doc.data();
-                    
-                    // Фильтруем: школа, класс И совпадение ID группы
-                    const msgGroupId = data.groupId || "main_class"; // Старые сообщения без ID вешаем на общий класс
+                    const msgGroupId = data.groupId || "main_class"; 
                     
                     if (data.school === userSchool && data.class === userClass && msgGroupId === currentGroupId) {
                         messagesArray.push(data);

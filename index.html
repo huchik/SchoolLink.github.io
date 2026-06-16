@@ -113,7 +113,7 @@
             top: 0; left: 0; bottom: 0; right: 0;
         }
 
-        /* ОСНОВНАЯ ЗОНА ЧАТА (ТЕПЕРЬ НА ВЕСЬ ЭКРАН) */
+        /* ОСНОВНАЯ ЗОНА ЧАТА */
         .chat-main {
             flex: 1;
             display: flex;
@@ -267,37 +267,46 @@
             padding: 5px;
         }
 
-        /* СТИКЕРЫ */
-        .sticker-wrapper { display: flex; align-items: center; }
-        .sticker-toggle-btn { background: none; border: none; font-size: 22px; cursor: pointer; padding: 5px; }
+        /* КНОПКИ ПАНЕЛЕЙ */
+        .media-toggle-btn { background: none; border: none; font-size: 22px; cursor: pointer; padding: 5px; }
         
-        .sticker-panel {
+        /* ОБЩИЙ СТИЛЬ ДЛЯ ОКРУЖАЮЩИХ ПАНЕЛЕЙ */
+        .media-panel {
             position: absolute;
             bottom: 75px;
-            left: 20px;
             width: 90vw;
-            max-width: 320px;
-            height: 280px;
+            max-width: 340px;
+            height: 320px;
             background-color: #17212b;
             border: 1px solid #24313f;
-            border-radius: 10px;
+            border-radius: 12px;
             box-shadow: 0 4px 20px rgba(0,0,0,0.5);
             display: flex;
             flex-direction: column;
             z-index: 999;
         }
-
-        .sticker-panel.hidden { display: none !important; }
-        .sticker-tabs { display: flex; background-color: #101921; border-bottom: 1px solid #24313f; }
-        .sticker-tab { padding: 10px 14px; color: #5288c1; font-size: 13px; font-weight: bold; }
+        .media-panel.hidden { display: none !important; }
+        
+        /* СТИКЕРЫ */
+        #sticker-panel { left: 15px; }
+        .sticker-tabs { display: flex; background-color: #101921; border-bottom: 1px solid #24313f; border-top-left-radius: 12px; border-top-right-radius: 12px;}
+        .sticker-tab { padding: 12px 16px; color: #5288c1; font-size: 13px; font-weight: bold; }
         .sticker-list { flex: 1; display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; padding: 10px; overflow-y: auto; }
         .sticker-item { width: 100%; aspect-ratio: 1; object-fit: contain; cursor: pointer; }
         .chat-sticker-img { max-width: 140px; max-height: 140px; width: 100%; height: auto; display: block; border-radius: 8px; margin-top: 4px; }
+
+        /* ГИФКИ (TENOR) */
+        #gif-panel { left: 60px; }
+        .gif-search-box { padding: 8px; background-color: #101921; border-bottom: 1px solid #24313f; border-top-left-radius: 12px; border-top-right-radius: 12px; }
+        .gif-search-box input { padding: 6px 12px; font-size: 14px; border-radius: 15px; }
+        .gif-list { flex: 1; display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; padding: 8px; overflow-y: auto; }
+        .gif-item { width: 100%; height: 110px; object-fit: cover; cursor: pointer; border-radius: 6px; background-color: #202b36; }
+        .chat-gif-img { max-width: 220px; max-height: 220px; width: 100%; height: auto; display: block; border-radius: 8px; margin-top: 4px; }
     </style>
 </head>
 <body>
 
-    <!-- ЭКРАН ВХОДА / РЕГИСТРАЦИИ -->
+    <!-- ЭКРАН ВХОДА -->
     <div id="auth-screen" class="auth-container">
         <h2 id="auth-title">SchoolLink</h2>
         <p id="auth-subtitle">Войдите, чтобы начать общение</p>
@@ -314,15 +323,11 @@
         </div>
 
         <button id="auth-main-btn" class="auth-btn" onclick="handleAuthSubmit()">Войти</button>
-        <div id="auth-toggle" class="toggle-auth" onclick="toggleAuthMode()">Создать аккаунт</div>
+        <div id="auth-toggle" class="toggle-auth" onclick="toggleAuthMode()">Создать актацию</div>
     </div>
 
-    <!-- ГЛАВНЫЙ КОНТЕЙНЕР ПРИЛОЖЕНИЯ -->
+    <!-- ГЛАВНЫЙ КОНТЕЙНЕР -->
     <div id="chat-screen" class="tg-container">
-        
-        <!-- БОКОВАЯ ПАНЕЛЬ ПОЛНОСТЬЮ УБРАНА -->
-
-        <!-- ОСНОВНОЕ ОКНО ЧАТА НА ВЕСЬ ЭКРАН -->
         <div class="chat-main">
             <div class="chat-header">
                 <div class="chat-header-left">
@@ -339,13 +344,20 @@
             <div class="chat-messages" id="chat-box"></div>
             
             <div class="chat-input-bar">
-                <div class="sticker-wrapper">
-                    <button type="button" id="sticker-btn" class="sticker-toggle-btn">😀</button>
-                    
-                    <div id="sticker-panel" class="sticker-panel hidden">
-                        <div class="sticker-tabs"><div class="sticker-tab">MemePack</div></div>
-                        <div id="sticker-list" class="sticker-list"></div>
+                <!-- СТИКЕРЫ -->
+                <button type="button" id="sticker-btn" class="media-toggle-btn">😀</button>
+                <div id="sticker-panel" class="media-panel hidden">
+                    <div class="sticker-tabs"><div class="sticker-tab">MemePack</div></div>
+                    <div id="sticker-list" class="sticker-list"></div>
+                </div>
+
+                <!-- ГИФКИ -->
+                <button type="button" id="gif-btn" class="media-toggle-btn">👾</button>
+                <div id="gif-panel" class="media-panel hidden">
+                    <div class="gif-search-box">
+                        <input type="text" id="gif-search-input" placeholder="Поиск гифок (на англ. лучше)..." oninput="searchGifs(this.value)">
                     </div>
+                    <div id="gif-list" class="gif-list"></div>
                 </div>
 
                 <input type="text" id="message-input" placeholder="Напишите сообщение..." onkeydown="if(event.key === 'Enter') sendMessage()">
@@ -359,6 +371,7 @@
         import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, updateProfile, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
         import { getFirestore, collection, addDoc, query, onSnapshot, serverTimestamp, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
+        // ТВОЙ FIREBASE CONFIG
         const firebaseConfig = {
             apiKey: "AIzaSyApr1QKnLQ3puv3Z2HzvXzT-J8ZeE6-s94",
             authDomain: "schoollink-f6d30.firebaseapp.com",
@@ -471,13 +484,10 @@
                 
                 document.getElementById('chat-room-title').innerText = `Чат ${userClass}`;
                 document.getElementById('chat-room-info').innerText = `г. ${userCity} | Школа №${userSchool}`;
-                
-                if(window.location.hash) {
-                    history.replaceState("", document.title, window.location.pathname + window.location.search);
-                }
 
                 loadMessages();
                 autoLoadAllStickers();
+                searchGifs(""); // Загрузить популярные гифки при старте
             } else {
                 currentUser = null;
                 if (unsubscribeMessages) unsubscribeMessages();
@@ -519,40 +529,27 @@
 
         function loadMessages() {
             if (unsubscribeMessages) unsubscribeMessages();
-
             const q = query(collection(db, "messages"));
 
             unsubscribeMessages = onSnapshot(q, (snapshot) => {
                 const chatBox = document.getElementById('chat-box');
                 chatBox.innerHTML = "";
-
                 let messagesArray = [];
                 
                 snapshot.forEach((doc) => {
                     const data = doc.data();
-                    
-                    const dbSchool = String(data.school).trim();
-                    const mySchool = String(userSchool).trim();
-                    const dbClass = String(data.class).toLowerCase().trim();
-                    const myClass = String(userClass).toLowerCase().trim();
-
-                    if (dbSchool === mySchool && dbClass === myClass) {
+                    if (String(data.school).trim() === String(userSchool).trim() && String(data.class).toLowerCase().trim() === String(userClass).toLowerCase().trim()) {
                         messagesArray.push(data);
                     }
                 });
 
-                messagesArray.sort((a, b) => {
-                    const timeA = a.timestamp ? a.timestamp.toMillis() : 0;
-                    const timeB = b.timestamp ? b.timestamp.toMillis() : 0;
-                    return timeA - timeB;
-                });
+                messagesArray.sort((a, b) => (a.timestamp ? a.timestamp.toMillis() : 0) - (b.timestamp ? b.timestamp.toMillis() : 0));
 
                 messagesArray.forEach((data) => {
                     if(!data.text) return;
                     
                     const rowDiv = document.createElement('div');
                     rowDiv.classList.add('message-row');
-
                     const msgDiv = document.createElement('div');
                     msgDiv.classList.add('message');
 
@@ -562,83 +559,113 @@
                     }
 
                     let messageBody = data.text;
+                    // Проверка на стикер
                     if (messageBody.startsWith('[sticker:') && messageBody.endsWith(']')) {
                         const stickerUrl = messageBody.replace('[sticker:', '').replace(']', '');
                         messageBody = `<img src="${stickerUrl}" class="chat-sticker-img" onerror="this.style.display='none'">`;
                     }
+                    // Проверка на гифку из Tenor
+                    else if (messageBody.startsWith('[gif:') && messageBody.endsWith(']')) {
+                        const gifUrl = messageBody.replace('[gif:', '').replace(']', '');
+                        messageBody = `<img src="${gifUrl}" class="chat-gif-img" onerror="this.style.display='none'">`;
+                    }
                     
                     msgDiv.innerHTML = `<span class="sender">${data.senderName}</span>${messageBody}`;
-                    
-                    const msgAvatarUrl = data.avatarUrl || DEFAULT_AVATAR;
-                    const avatarImg = `<img src="${msgAvatarUrl}" class="user-avatar" onerror="this.src='${DEFAULT_AVATAR}'">`;
-
-                    rowDiv.innerHTML = avatarImg;
+                    rowDiv.innerHTML = `<img src="${data.avatarUrl || DEFAULT_AVATAR}" class="user-avatar" onerror="this.src='${DEFAULT_AVATAR}'">`;
                     rowDiv.appendChild(msgDiv);
-                    
                     chatBox.appendChild(rowDiv);
                 });
-                
                 chatBox.scrollTop = chatBox.scrollHeight;
             });
         }
 
-        // Панель стикеров
+        // РАБОТА С ПАНЕЛЯМИ (Стикеры и Гифки)
         const stickerBtn = document.getElementById('sticker-btn');
         const stickerPanel = document.getElementById('sticker-panel');
-        const stickerList = document.getElementById('sticker-list');
+        const gifBtn = document.getElementById('gif-btn');
+        const gifPanel = document.getElementById('gif-panel');
 
-        if (stickerBtn && stickerPanel) {
-            stickerBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                stickerPanel.classList.toggle('hidden');
-            });
-        }
-
-        document.addEventListener('click', (e) => {
-            if (stickerPanel && !stickerPanel.contains(e.target) && e.target !== stickerBtn) {
-                stickerPanel.classList.add('hidden');
-            }
+        stickerBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            stickerPanel.classList.toggle('hidden');
+            gifPanel.classList.add('hidden');
         });
 
-        window.sendToFirebaseExternal = function(path) {
-            sendToFirebase(path);
-        }
+        gifBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            gifPanel.classList.toggle('hidden');
+            stickerPanel.classList.add('hidden');
+        });
 
+        document.addEventListener('click', (e) => {
+            if (!stickerPanel.contains(e.target) && e.target !== stickerBtn) stickerPanel.classList.add('hidden');
+            if (!gifPanel.contains(e.target) && e.target !== gifBtn) gifPanel.classList.add('hidden');
+        });
+
+        // Загрузка стикеров
         function autoLoadAllStickers() {
+            const stickerList = document.getElementById('sticker-list');
             if (!stickerList) return;
             stickerList.innerHTML = '';
-            
             let index = 1;
-
             function checkNextSticker() {
                 const path = `Stickers/MemePack/${index}.png`;
                 const img = new Image();
-                
                 img.onload = function() {
                     const stickerImg = document.createElement('img');
                     stickerImg.src = path;
                     stickerImg.className = 'sticker-item';
-                    stickerImg.alt = `sticker-${index}`;
-                    
                     stickerImg.addEventListener('click', () => {
-                        sendToFirebaseExternal(`[sticker:${path}]`);
+                        sendToFirebase(`[sticker:${path}]`);
                         stickerPanel.classList.add('hidden');
                     });
-                    
                     stickerList.appendChild(stickerImg);
-                    
                     index++;
                     checkNextSticker();
                 };
-                
-                img.onerror = function() {
-                    console.log(`Загрузка стикеров завершена.`);
-                };
-                
+                img.onerror = () => console.log("Стикеры загружены.");
                 img.src = path;
             }
-
             checkNextSticker();
+        }
+
+        // ИНТЕГРАЦИЯ TENOR GIF
+        let searchTimeout;
+        window.searchGifs = function(queryText) {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                const gifList = document.getElementById('gif-list');
+                // Мы используем публичный анонимный ключ Tenor для тестов.
+                const apiKey = "LIVDSRZULELA"; 
+                let url = `https://g.tenor.com/v1/trending?key=${apiKey}&limit=14&media_filter=minimal`;
+                
+                if(queryText.trim() !== "") {
+                    url = `https://g.tenor.com/v1/search?q=${encodeURIComponent(queryText)}&key=${apiKey}&limit=14&media_filter=minimal`;
+                }
+
+                fetch(url)
+                    .then(res => res.json())
+                    .then(data => {
+                        gifList.innerHTML = "";
+                        if(!data.results || data.results.length === 0) {
+                            gifList.innerHTML = "<p style='grid-column:1/3; text-align:center; color:#7f91a4; font-size:14px; padding:20px;'>Ничего не найдено</p>";
+                            return;
+                        }
+                        data.results.forEach(item => {
+                            // Берем сжатый формат гифки (tinygif), чтобы сайт не лагал
+                            const gifUrl = item.media[0].tinygif.url; 
+                            const img = document.createElement('img');
+                            img.src = gifUrl;
+                            img.className = 'gif-item';
+                            img.addEventListener('click', () => {
+                                sendToFirebase(`[gif:${gifUrl}]`);
+                                gifPanel.classList.add('hidden');
+                            });
+                            gifList.appendChild(img);
+                        });
+                    })
+                    .catch(err => console.error("Ошибка Tenor API:", err));
+            }, 400); // Небольшая задержка, чтобы запросы не спамились при вводе букв
         }
     </script>
 </body>

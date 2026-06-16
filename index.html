@@ -349,7 +349,6 @@
         .settings-container h2 { font-size: 22px; text-align: center; margin-bottom: 5px; }
         .settings-label { font-size: 13px; color: #7f91a4; margin-bottom: -6px; padding-left: 4px; }
         
-        /* Контейнер для загрузки аватарки в настройках */
         .avatar-upload-box {
             display: flex;
             gap: 10px;
@@ -499,9 +498,13 @@
         let userAvatarUrl = "";
         let isSignUpMode = false; 
         let unsubscribeMessages = null;
+        let isFirstLoad = true; // Чтобы звук не играл при самом первом открытии чата на старых сообщениях
 
         const DEFAULT_AVATAR = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
-        const imgbbApiKey = "9a59f793012429e57f5cbe3083923d65"; // Твой проверенный ключ Imgbb
+        const imgbbApiKey = "9a59f793012429e57f5cbe3083923d65";
+
+        // Создаем аудио объект для уведомлений
+        const notificationSound = new Audio("https://signals.api.soundoftext.com/static/sounds/notification.mp3");
 
         window.toggleAuthMode = function() {
             isSignUpMode = !isSignUpMode;
@@ -581,6 +584,7 @@
                 if (unsubscribeMessages) unsubscribeMessages();
                 document.getElementById('auth-screen').style.display = 'flex';
                 document.getElementById('chat-screen').style.display = 'none';
+                isFirstLoad = true; // Сбрасываем при выходе
             }
         });
 
@@ -646,6 +650,7 @@
                 const chatBox = document.getElementById('chat-box');
                 chatBox.innerHTML = "";
                 let messagesArray = [];
+                let hasNewIncomingMessage = false;
                 
                 snapshot.forEach((doc) => {
                     const data = doc.data();
@@ -655,6 +660,23 @@
                 });
 
                 messagesArray.sort((a, b) => (a.timestamp ? a.timestamp.toMillis() : 0) - (b.timestamp ? b.timestamp.toMillis() : 0));
+
+                // Проверяем последнее сообщение на предмет проигрывания звука
+                if (messagesArray.length > 0) {
+                    const lastMsg = messagesArray[messagesArray.length - 1];
+                    // Если это НЕ наше сообщение и загрузка НЕ первая
+                    if (lastMsg.userId !== currentUser.uid && !isFirstLoad) {
+                        hasNewIncomingMessage = true;
+                    }
+                }
+
+                // Логика звука в фоне
+                if (hasNewIncomingMessage && document.hidden) {
+                    notificationSound.play().catch(e => console.log("Браузер заблокировал звук до клика:", e));
+                }
+
+                // После первой обработки snapshot снимаем флаг первой загрузки
+                isFirstLoad = false;
 
                 messagesArray.forEach((data) => {
                     if(!data.text) return;
@@ -777,7 +799,6 @@
             }, 400);
         }
 
-        // Загрузка картинок в сам чат
         window.uploadImage = function(inputElement) {
             const file = inputElement.files[0];
             if (!file) return;
@@ -815,7 +836,6 @@
             });
         }
 
-        // ЗАГРУЗКА АВАТАРКИ ЧЕРЕЗ НАСТРОЙКИ
         window.uploadAvatarImage = function(inputElement) {
             const file = inputElement.files[0];
             if (!file) return;
@@ -838,11 +858,11 @@
             .then((response) => {
                 avatarInputText.disabled = false;
                 saveBtn.disabled = false;
-                inputElement.value = ""; // Очищаем файл
+                inputElement.value = ""; 
 
                 if (response.success) {
                     const directUrl = response.data.url;
-                    avatarInputText.value = directUrl; // Автоматом подставляем ссылку в поле ввода
+                    avatarInputText.value = directUrl; 
                     alert("📸 Аватарка успешно загружена! Не забудь нажать кнопку 'Сохранить'.");
                 } else {
                     avatarInputText.value = "";
@@ -858,7 +878,6 @@
             });
         }
 
-        // ЛОГИКА ОКНА НАСТРОЕК
         window.openSettingsModal = function() {
             if(!currentUser) return;
             document.getElementById('set-nickname').value = currentUser.displayName || "";
@@ -913,7 +932,7 @@
                 await fetchAndApplyUserData();
 
             } catch (error) {
-                console.error("Ошибка сохранения настроек:", error);
+                console.error("Ошибка保存 настроек:", error);
                 alert("Не удалось сохранить настройки: " + error.message);
             } finally {
                 saveBtn.innerText = "Сохранить";

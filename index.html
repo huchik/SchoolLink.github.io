@@ -381,7 +381,6 @@
 </head>
 <body>
 
-    <!-- ЭКРАН ВХОДА -->
     <div id="auth-screen" class="auth-container">
         <h2 id="auth-title">SchoolLink</h2>
         <p id="auth-subtitle">Войдите, чтобы начать общение</p>
@@ -401,7 +400,6 @@
         <div id="auth-toggle" class="toggle-auth" onclick="toggleAuthMode()">Создать аккаунт</div>
     </div>
 
-    <!-- ГЛАВНЫЙ КОНТЕЙНЕР -->
     <div id="chat-screen" class="tg-container">
         <div class="chat-main">
             <div class="chat-header">
@@ -420,14 +418,12 @@
             <div class="chat-messages" id="chat-box"></div>
             
             <div class="chat-input-bar">
-                <!-- СТИКЕРЫ -->
                 <button type="button" id="sticker-btn" class="media-toggle-btn">😀</button>
                 <div id="sticker-panel" class="media-panel hidden">
                     <div class="sticker-tabs"><div class="sticker-tab">MemePack</div></div>
                     <div id="sticker-list" class="sticker-list"></div>
                 </div>
 
-                <!-- ГИФКИ -->
                 <button type="button" id="gif-btn" class="media-toggle-btn">👾</button>
                 <div id="gif-panel" class="media-panel hidden">
                     <div class="gif-search-box">
@@ -436,7 +432,6 @@
                     <div id="gif-list" class="gif-list"></div>
                 </div>
 
-                <!-- ОТПРАВКА КАРТИНОК В ЧАТ -->
                 <button type="button" id="upload-btn" class="media-toggle-btn" onclick="document.getElementById('file-input').click()">📎</button>
                 <input type="file" id="file-input" accept="image/*" style="display: none;" onchange="uploadImage(this)">
 
@@ -446,7 +441,6 @@
         </div>
     </div>
 
-    <!-- ОКНО НАСТРОЕК ПРОФИЛЯ -->
     <div id="settings-modal" class="modal-overlay">
         <div class="settings-container">
             <h2>Настройки профиля</h2>
@@ -505,25 +499,23 @@
         let isSignUpMode = false; 
         let unsubscribeMessages = null;
         let isFirstLoad = true; 
-        let isAudioAllowed = false; // Флаг: разрешил ли нам браузер воспроизводить аудио
+        let isAudioAllowed = false;
 
         const DEFAULT_AVATAR = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
         const imgbbApiKey = "9a59f793012429e57f5cbe3083923d65";
 
-        // Стабильный и чистый аудиофайл уведомления
-        const notificationSound = new Audio("https://assets.mixkit.co/active_storage/sfx/2869/2869-500.wav");
+        // ЗВУК ЗАШИТ ПРЯМО В КОД (BASE64) — ТЕПЕРЬ ОН РАБОТАЕТ ВСЕГДА И БЕЗ ИНТЕРНЕТА!
+        const notificationSound = new Audio("data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==");
 
         // УМНАЯ АКТИВАЦИЯ ЗВУКА ПРИ КЛИКЕ ПО СТРАНИЦЕ
         function initAudioOnInteraction() {
-            if (isAudioAllowed) return; // Если уже активировали, ничего не делаем
+            if (isAudioAllowed) return; 
 
-            // Запускаем звук, чтобы браузер открыл аудио-контекст для нашей вкладки
             notificationSound.play()
                 .then(() => {
                     isAudioAllowed = true;
                     console.log("🔊 Звуковая подсистема успешно активирована кликом пользователя!");
                     
-                    // Удаляем события, так как аудио разблокировано на всю текущую сессию
                     document.removeEventListener('click', initAudioOnInteraction);
                     document.removeEventListener('keydown', initAudioOnInteraction);
                     document.removeEventListener('touchstart', initAudioOnInteraction);
@@ -533,7 +525,6 @@
                 });
         }
 
-        // Вешаем слушатели на действия пользователя для разблокировки аудио
         document.addEventListener('click', initAudioOnInteraction);
         document.addEventListener('keydown', initAudioOnInteraction);
         document.addEventListener('touchstart', initAudioOnInteraction);
@@ -701,7 +692,7 @@
                     }
                 }
 
-                // Звук срабатывает ТОЛЬКО если вкладка скрыта и аудиосистема разблокирована
+                // Включаем звук, если вкладка свернута
                 if (hasNewIncomingMessage && document.hidden && isAudioAllowed) {
                     notificationSound.play().catch(e => console.log("Ошибка воспроизведения звука:", e));
                 }

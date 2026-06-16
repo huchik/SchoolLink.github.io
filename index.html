@@ -268,7 +268,7 @@
         }
 
         /* КНОПКИ ПАНЕЛЕЙ */
-        .media-toggle-btn { background: none; border: none; font-size: 22px; cursor: pointer; padding: 5px; }
+        .media-toggle-btn { background: none; border: none; font-size: 22px; cursor: pointer; padding: 5px; user-select: none; }
         
         /* ОБЩИЙ СТИЛЬ ДЛЯ ОКРУЖАЮЩИХ ПАНЕЛЕЙ */
         .media-panel {
@@ -302,11 +302,13 @@
         .gif-list { flex: 1; display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; padding: 8px; overflow-y: auto; }
         .gif-item { width: 100%; height: 110px; object-fit: cover; cursor: pointer; border-radius: 6px; background-color: #202b36; }
         .chat-gif-img { max-width: 220px; max-height: 220px; width: 100%; height: auto; display: block; border-radius: 8px; margin-top: 4px; }
+
+        /* ИЗОБРАЖЕНИЯ ПОЛЬЗОВАТЕЛЕЙ */
+        .chat-user-img { max-width: 280px; max-height: 350px; width: 100%; height: auto; display: block; border-radius: 10px; margin-top: 6px; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
     </style>
 </head>
 <body>
 
-    <!-- ЭКРАН ВХОДА -->
     <div id="auth-screen" class="auth-container">
         <h2 id="auth-title">SchoolLink</h2>
         <p id="auth-subtitle">Войдите, чтобы начать общение</p>
@@ -323,10 +325,9 @@
         </div>
 
         <button id="auth-main-btn" class="auth-btn" onclick="handleAuthSubmit()">Войти</button>
-        <div id="auth-toggle" class="toggle-auth" onclick="toggleAuthMode()">Создать актацию</div>
+        <div id="auth-toggle" class="toggle-auth" onclick="toggleAuthMode()">Создать аккаунт</div>
     </div>
 
-    <!-- ГЛАВНЫЙ КОНТЕЙНЕР -->
     <div id="chat-screen" class="tg-container">
         <div class="chat-main">
             <div class="chat-header">
@@ -344,14 +345,12 @@
             <div class="chat-messages" id="chat-box"></div>
             
             <div class="chat-input-bar">
-                <!-- СТИКЕРЫ -->
                 <button type="button" id="sticker-btn" class="media-toggle-btn">😀</button>
                 <div id="sticker-panel" class="media-panel hidden">
                     <div class="sticker-tabs"><div class="sticker-tab">MemePack</div></div>
                     <div id="sticker-list" class="sticker-list"></div>
                 </div>
 
-                <!-- ГИФКИ -->
                 <button type="button" id="gif-btn" class="media-toggle-btn">👾</button>
                 <div id="gif-panel" class="media-panel hidden">
                     <div class="gif-search-box">
@@ -359,6 +358,9 @@
                     </div>
                     <div id="gif-list" class="gif-list"></div>
                 </div>
+
+                <button type="button" id="upload-btn" class="media-toggle-btn" onclick="document.getElementById('file-input').click()">📎</button>
+                <input type="file" id="file-input" accept="image/*" style="display: none;" onchange="uploadImage(this)">
 
                 <input type="text" id="message-input" placeholder="Напишите сообщение..." onkeydown="if(event.key === 'Enter') sendMessage()">
                 <button class="send-btn" onclick="sendMessage()">👉</button>
@@ -487,7 +489,7 @@
 
                 loadMessages();
                 autoLoadAllStickers();
-                searchGifs(""); // Загрузить популярные гифки при старте
+                searchGifs(""); 
             } else {
                 currentUser = null;
                 if (unsubscribeMessages) unsubscribeMessages();
@@ -559,6 +561,7 @@
                     }
 
                     let messageBody = data.text;
+                    
                     // Проверка на стикер
                     if (messageBody.startsWith('[sticker:') && messageBody.endsWith(']')) {
                         const stickerUrl = messageBody.replace('[sticker:', '').replace(']', '');
@@ -568,6 +571,11 @@
                     else if (messageBody.startsWith('[gif:') && messageBody.endsWith(']')) {
                         const gifUrl = messageBody.replace('[gif:', '').replace(']', '');
                         messageBody = `<img src="${gifUrl}" class="chat-gif-img" onerror="this.style.display='none'">`;
+                    }
+                    // Проверка на загруженную пользователем картинку
+                    else if (messageBody.startsWith('[image:') && messageBody.endsWith(']')) {
+                        const imgUrl = messageBody.replace('[image:', '').replace(']', '');
+                        messageBody = `<img src="${imgUrl}" class="chat-user-img" onclick="window.open('${imgUrl}', '_blank')">`;
                     }
                     
                     msgDiv.innerHTML = `<span class="sender">${data.senderName}</span>${messageBody}`;
@@ -635,7 +643,6 @@
             clearTimeout(searchTimeout);
             searchTimeout = setTimeout(() => {
                 const gifList = document.getElementById('gif-list');
-                // Мы используем публичный анонимный ключ Tenor для тестов.
                 const apiKey = "LIVDSRZULELA"; 
                 let url = `https://g.tenor.com/v1/trending?key=${apiKey}&limit=14&media_filter=minimal`;
                 
@@ -652,7 +659,6 @@
                             return;
                         }
                         data.results.forEach(item => {
-                            // Берем сжатый формат гифки (tinygif), чтобы сайт не лагал
                             const gifUrl = item.media[0].tinygif.url; 
                             const img = document.createElement('img');
                             img.src = gifUrl;
@@ -665,7 +671,47 @@
                         });
                     })
                     .catch(err => console.error("Ошибка Tenor API:", err));
-            }, 400); // Небольшая задержка, чтобы запросы не спамились при вводе букв
+            }, 400);
+        }
+
+        // TВОЙ API-КЛЮЧ ЗДЕСЬ УЖЕ ВСТАВЛЕН
+        window.uploadImage = function(inputElement) {
+            const file = inputElement.files[0];
+            if (!file) return;
+
+            const inputField = document.getElementById('message-input');
+            const oldPlaceholder = inputField.placeholder;
+            inputField.placeholder = "🖼 Картиночка грузится...";
+            inputField.disabled = true;
+
+            const formData = new FormData();
+            formData.append("image", file);
+
+            const imgbbApiKey = "9a59f793012429e57f5cbe3083923d65";
+
+            fetch(`https://api.imgbb.com/1/upload?key=${imgbbApiKey}`, {
+                method: "POST",
+                body: formData
+            })
+            .then(res => res.json())
+            .then(async (response) => {
+                inputField.placeholder = oldPlaceholder;
+                inputField.disabled = false;
+                inputElement.value = ""; 
+
+                if (response.success) {
+                    const directUrl = response.data.url;
+                    await sendToFirebase(`[image:${directUrl}]`);
+                } else {
+                    alert("Не удалось загрузить картинку. Попробуй ещё раз!");
+                }
+            })
+            .catch(err => {
+                console.error("Ошибка Imgbb:", err);
+                inputField.placeholder = oldPlaceholder;
+                inputField.disabled = false;
+                alert("Ошибка сети при загрузке фото.");
+            });
         }
     </script>
 </body>

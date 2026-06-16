@@ -499,36 +499,12 @@
         let isSignUpMode = false; 
         let unsubscribeMessages = null;
         let isFirstLoad = true; 
-        let isAudioAllowed = false;
 
         const DEFAULT_AVATAR = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
         const imgbbApiKey = "9a59f793012429e57f5cbe3083923d65";
 
-        // ЗВУК ЗАШИТ ПРЯМО В КОД (BASE64) — ТЕПЕРЬ ОН РАБОТАЕТ ВСЕГДА И БЕЗ ИНТЕРНЕТА!
-        const notificationSound = new Audio("data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==");
-
-        // УМНАЯ АКТИВАЦИЯ ЗВУКА ПРИ КЛИКЕ ПО СТРАНИЦЕ
-        function initAudioOnInteraction() {
-            if (isAudioAllowed) return; 
-
-            notificationSound.play()
-                .then(() => {
-                    isAudioAllowed = true;
-                    console.log("🔊 Звуковая подсистема успешно активирована кликом пользователя!");
-                    
-                    document.removeEventListener('click', initAudioOnInteraction);
-                    document.removeEventListener('keydown', initAudioOnInteraction);
-                    document.removeEventListener('touchstart', initAudioOnInteraction);
-                })
-                .catch(e => {
-                    console.log("Ожидание полноценного клика для звука...");
-                });
-        }
-
-        document.addEventListener('click', initAudioOnInteraction);
-        document.addEventListener('keydown', initAudioOnInteraction);
-        document.addEventListener('touchstart', initAudioOnInteraction);
-
+        // ЧИСТАЯ КРАСИВАЯ СТРОЧКА ДЛЯ ТВОЕГО ФАЙЛА
+        const notificationSound = new Audio("notification.mp3");
 
         window.toggleAuthMode = function() {
             isSignUpMode = !isSignUpMode;
@@ -692,9 +668,9 @@
                     }
                 }
 
-                // Включаем звук, если вкладка свернута
-                if (hasNewIncomingMessage && document.hidden && isAudioAllowed) {
-                    notificationSound.play().catch(e => console.log("Ошибка воспроизведения звука:", e));
+                // Воспроизведение звука, если вкладка скрыта
+                if (hasNewIncomingMessage && document.hidden) {
+                    notificationSound.play().catch(e => console.log("Не удалось запустить аудио: требуется первый клик по экрану.", e));
                 }
 
                 isFirstLoad = false;
